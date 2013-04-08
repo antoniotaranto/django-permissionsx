@@ -6,6 +6,14 @@ Authorization for Django Class-Based Views.
 
 This package works by adding to requests objects that are required for checking permissions. Objects are added by invoking static method ```get_request_context()``` of a view, while the logic is held in ```permissions``` attribute. ```PermissionsXMiddleware``` either raises ```django.core.exceptions.PermissionDenied``` or redirects to another view (by using URL name defined in ```urls.py```).
 
+### Working example
+
+**Have a look at the example you will find in source package.** You can run it simply by installing ```django-permissionsx``` somewhere in your Python path and by running:
+
+        (example_virtualenv)demo:~/projects/django-permissionsx/example$ ./manage.py runserver
+
+Now point your browser to http://127.0.0.1:8000
+
 ## Installation
 
 1. Install ```django-permissionsx``` package:
