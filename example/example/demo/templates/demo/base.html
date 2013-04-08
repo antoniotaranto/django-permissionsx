@@ -1,0 +1,17 @@
+<html>
+<head>
+    <title>Demo</title>
+</head>
+<body>
+<h1><a href="{% url 'home' %}">Demo</a></h1>
+<ul>
+    <li><a href="{% url 'log_in' %}">Log in</a></li>
+    <li><a href="{% url 'profile' %}">Profile</a></li>
+    <li><a href="{% url 'access_denied' %}">Access Denied if not authenticated</a></li>
+    {% if user.is_authenticated %}
+    <li><a href="{% url 'log_out' %}">Log out</a></li>
+    {% endif %}
+</ul>
+{% block content %}{% endblock content %}
+</body>
+</html>
