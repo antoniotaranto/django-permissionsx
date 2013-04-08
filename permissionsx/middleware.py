@@ -21,7 +21,6 @@ class PermissionsXMiddleware(object):
         self._views_cache = {}
 
     def check_permissions(self, request, permissions):
-        # NOTE: Previous syntax was differnt (with !); build the logic inside request objects, do not complicate syntax
         for perm in permissions:
             redirect_url_name = None
             if '->' in perm:

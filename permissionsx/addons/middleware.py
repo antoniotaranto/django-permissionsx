@@ -7,6 +7,7 @@ PermissionsX - Authorization for Django Class-Based Views.
 """
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
+from django.core.exceptions import ObjectDoesNotExist
 
 from permissionsx.utils import get_class
 
@@ -17,7 +18,7 @@ class PermissionsXProfileMiddleware(object):
         assert hasattr(request, 'user'), 'PermissionsXProfileMiddleware requires AuthenticationMiddleware to be installed.'
         try:        
             request.profile = request.user.get_profile()
-        except (TypeError, AttributeError):
+        except (TypeError, AttributeError, ObjectDoesNotExist):
             request.profile = AnonymousActor()
 
 

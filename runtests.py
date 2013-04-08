@@ -4,6 +4,7 @@ import sys
 
 from django.conf import settings
 
+
 sys.path.append(os.path.join(os.path.dirname(__file__), 'permissionsx'))
 
 settings.configure(
@@ -22,6 +23,7 @@ settings.configure(
     ],
     ROOT_URLCONF='tests.urls'
 )
+
 
 from django.test.utils import get_runner
 
