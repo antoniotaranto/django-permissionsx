@@ -33,6 +33,56 @@ Now point your browser to http://127.0.0.1:8000
 
 4. You're done!
 
+## Syntax
+
+Permissions are defined by setting ```permissions``` attribute on a view class.
+
+### Basic permission
+
+#### Ex.:
+        permissions = ['user__is_authenticated']
+
+### Redirects
+
+If permission check ```is_authenticated``` fails, user will be redirected to URL named ```auth_login```.
+
+#### Ex.:
+        permissions = ['user__is_authenticated->auth_login']
+        
+### Multiple permissions
+
+These permissions will be checked according to the order of the list. If the first one fails, and there is no redirect defined, ```permissionsx``` will raise ```PermissionDenied``` exception.
+
+#### Ex.:
+        permissions = ['user__is_authenticated', 'profile__is_boss']
+
+### Multiple permissions where only one needs to be ```True``` (boolean OR)
+
+In this case user will be able to access the view if:
+* is logged in (default Django authorization mechanism);
+* ```self.request.test.assigned_to(self.request.profile) == True```;
+* ```self.request.profile.is_engineer == True```.
+
+If the user is not logged in, they will be instantly redirected to login page.
+
+#### Ex.:
+        permissions = ['user__is_authenticated->login', ('test__assigned_to:profile', 'profile__is_engineer')]
+        
+### Relations with other request objects
+
+This is essentially a shortcut for saying:
+* ```self.request.profile.owns(self.request.document)```
+
+Where:
+
+        class Profile(models.Model):
+                [...]
+                def owns(self, obj):
+                            return obj.owner == self
+
+#### Ex.:
+        permissions = ['profile__owns:document']
+
 ## Examples
 
 Here is a list of some use cases you may be interested in:
@@ -41,6 +91,7 @@ Here is a list of some use cases you may be interested in:
         permissions = ['user__is_authenticated->auth_login']
         permissions = ['user__is_authenticated', 'profile__is_boss']
         permissions = ['user__is_authenticated', 'profile__is_boss_or_leader']
+        permissions = ['user__is_authenticated->auth_login', ('test_scenario__assigned_to:profile', 'profile__is_engineer', 'profile__is_manager')]
         permissions = ['profile__owns:document']
         permissions = ['profile__is_boss_or_leader', 'document__editable_by:profile']
         permissions = ['profile__has_purchased:document']
@@ -125,3 +176,7 @@ Finally, ```AnonymousActor``` may look like:
 
         def is_boss_or_leader(self):
             return False
+
+## Contact / More info
+
+If there is anything I can help with, or there is something worth adding, or there are just any comments on this stuff or bugs you would like to report, please get in touch via Github, Twitter ([@thinkingpotato](http://twitter.com/thinkingpotato/)) or @freenode/#django.
