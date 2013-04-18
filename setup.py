@@ -33,6 +33,6 @@ setup(
         'Topic :: Software Development',
         'Topic :: Software Development :: Libraries',
     ],
-    install_requires=['Django>=1.4.5'],
+    install_requires=[],
     test_suite='runtests',
 )
