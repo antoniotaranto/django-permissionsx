@@ -27,7 +27,7 @@ class Something(object):
 
 
 somethings = {
-    '1': Something('user-a'), # NOTE: "user-a" owns object with pk == "1".
+    '1': Something('user'), # NOTE: "user" owns object with pk == "1".
     '2': Something('user-b'), # NOTE: "user-b" owns object with pk == "2".
-    '3': Something('user-a', active=False), # NOTE: "user-a" owns object with pk == "3" which is NOT active.
+    '3': Something('user', active=False), # NOTE: "user" owns object with pk == "3" which is NOT active.
 }

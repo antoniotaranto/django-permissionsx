@@ -42,6 +42,26 @@ class IsAuthenticatedRedirectView(DummyView):
     permissions = ['user__is_authenticated->login']
 
 
+class OrPermissionsView(DummyView):
+
+    permissions = [('user__is_staff', 'user__is_superuser')]
+
+
+class OrPermissionsRedirectView(DummyView):
+
+    permissions = [('user__is_staff', 'user__is_superuser'), 'user__is_authenticated->login']
+
+
+class OrPermissionsYaRedirectView(DummyView):
+
+    permissions = [('user__is_staff->login', 'user__is_superuser')]
+
+
+class OrPermissionsYa2RedirectView(DummyView):
+
+    permissions = ['user__is_authenticated->login', ('user__is_staff', 'user__is_superuser')]
+
+
 class CommonRequestContext(object):
 
     @staticmethod
@@ -77,6 +97,10 @@ login_view = LoginView.as_view()
 anonymous_view = AnonymousView.as_view()
 is_authenticated_view = IsAuthenticatedView.as_view()
 is_authenticated_redirect_view = IsAuthenticatedRedirectView.as_view()
+or_permissions_view = OrPermissionsView.as_view()
+or_permissions_redirect_view = OrPermissionsRedirectView.as_view()
+or_permissions_ya_redirect_view = OrPermissionsYaRedirectView.as_view()
+or_permissions_ya_2_redirect_view = OrPermissionsYa2RedirectView.as_view()
 request_context_view = RequestContextView.as_view()
 request_context_redirect_view = RequestContextRedirectView.as_view()
 request_context_redirect_authenticated_view = RequestContextRedirectAuthenticatedView.as_view()
