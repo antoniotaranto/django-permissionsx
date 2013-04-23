@@ -8,7 +8,7 @@ PermissionsX - Authorization for Django Class-Based Views.
 import os
 import sys
 
-VERSION = (0, 0, 4)
+VERSION = (0, 0, 5)
 
 __version__ = ".".join(map(str, VERSION[0:3])) + "".join(VERSION[3:])
 __author__ = "Robert Pogorzelski <thinkingpotato@gmail.com>"

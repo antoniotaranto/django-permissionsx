@@ -23,10 +23,12 @@ from permissionsx.tests.views import (
     request_context_redirect_authenticated_view,
     request_context_view,
     request_context_attribute_check_view,
+    request_context_custom_middleware_view,
 )
 
 
 SOMETHING_PK = '(?P<pk>[0-9]{1})'
+
 
 urlpatterns = patterns('',
     url(r'^anonymous/', anonymous_view, name='anonymous'),
@@ -41,4 +43,5 @@ urlpatterns = patterns('',
     url(r'^request-context-redirect-authenticated/{}/'.format(SOMETHING_PK), request_context_redirect_authenticated_view, name='request_context_redirect_authenticated'),
     url(r'^request-context/{}/'.format(SOMETHING_PK), request_context_view, name='request_context'),
     url(r'^request-context-attribute-check/{}/'.format(SOMETHING_PK), request_context_attribute_check_view, name='request_context_attribute_check'),
+    url(r'^request-context-custom-middleware/{}/'.format(SOMETHING_PK), request_context_custom_middleware_view, name='request_context_custom_middleware'),
 )

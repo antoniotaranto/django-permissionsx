@@ -8,20 +8,14 @@ PermissionsX - Authorization for Django Class-Based Views.
 from django.utils import importlib
 
 
-def get_class(*args):
-    if len(args) == 1:
-        module_path, _, class_name = args[0].rpartition('.')
-    elif len(args) == 2:
-        module_path, class_name = args
-    else:
-        raise Exception('{} is invalid get_class() parameter')
+def get_class(module_name, cls_name):
     try:
-        module = importlib.import_module(module_path)
+        module = importlib.import_module(module_name)
     except ImportError:
-        raise ImportError('Invalid class path: {}'.format(module_path))
+        raise ImportError('Invalid class path: {}'.format(module_name))
     try:
-        cls = getattr(module, class_name)
+        cls = getattr(module, cls_name)
     except AttributeError:
-        raise ImportError('Invalid class name: {}'.format(class_name))
+        raise ImportError('Invalid class name: {}'.format(cls_name))
     else:
         return cls

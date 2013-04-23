@@ -75,22 +75,27 @@ class CommonRequestContext(object):
 
 class RequestContextView(DummyView, CommonRequestContext):
 
-    permissions = ['actor__owns:something']
+    permissions = ['something__owned_by:user']
 
 
 class RequestContextRedirectView(DummyView, CommonRequestContext):
 
-    permissions = ['actor__owns:something->login']
+    permissions = ['something__owned_by:user->login']
 
 
 class RequestContextRedirectAuthenticatedView(DummyView, CommonRequestContext):
 
-    permissions = ['user__is_authenticated->login', 'actor__owns:something']
+    permissions = ['user__is_authenticated->login', 'something__owned_by:user']
 
 
 class RequestContextAttributeCheckView(DummyView, CommonRequestContext):
 
-    permissions = ['actor__owns:something', 'something__is_active']
+    permissions = ['something__owned_by:user', 'something__is_active']
+
+
+class RequestContextCustomMiddlewareView(DummyView, CommonRequestContext):
+
+    permissions = ['custom_actor__doesnt_own:something']
 
 
 login_view = LoginView.as_view()
@@ -105,3 +110,4 @@ request_context_view = RequestContextView.as_view()
 request_context_redirect_view = RequestContextRedirectView.as_view()
 request_context_redirect_authenticated_view = RequestContextRedirectAuthenticatedView.as_view()
 request_context_attribute_check_view = RequestContextAttributeCheckView.as_view()
+request_context_custom_middleware_view = RequestContextCustomMiddlewareView.as_view()

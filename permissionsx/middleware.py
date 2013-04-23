@@ -5,6 +5,7 @@ PermissionsX - Authorization for Django Class-Based Views.
 :license:   BSD, see LICENSE for more details.
 
 """
+from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.core.exceptions import PermissionDenied
 from django.core.urlresolvers import reverse

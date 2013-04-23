@@ -2,27 +2,40 @@
 import os
 import sys
 
+import django
 from django.conf import settings
 
 
 sys.path.append(os.path.join(os.path.dirname(__file__), 'permissionsx'))
 
-settings.configure(
-    DATABASES={
+
+configure_settings = {
+    'DATABASES': {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
             'NAME': ':memory:',
         }
     },
-    SECRET_KEY='THIS_IS_SECRET',
-    INSTALLED_APPS=[
+    'SECRET_KEY': 'THIS_IS_SECRET',
+    'INSTALLED_APPS': [
         'django.contrib.auth',
         'django.contrib.contenttypes',
         'django.contrib.sessions',
         'tests',
     ],
-    ROOT_URLCONF='tests.urls'
-)
+    'ROOT_URLCONF': 'tests.urls',
+    'MIDDLEWARE_CLASSES': (
+        'django.contrib.sessions.middleware.SessionMiddleware',
+        'django.contrib.auth.middleware.AuthenticationMiddleware',
+        'permissionsx.middleware.PermissionsXMiddleware',
+        'permissionsx.tests.middleware.PermissionsCustomRequestObjectMiddleware',
+    ),
+    'TEMPLATE_DIRS': (
+        os.path.join(os.path.abspath(os.path.dirname(__file__)), 'templates'),
+    ),
+}
+
+settings.configure(**configure_settings)
 
 
 from django.test.utils import get_runner

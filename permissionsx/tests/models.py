@@ -5,15 +5,13 @@ PermissionsX - Authorization for Django Class-Based Views.
 :license:   BSD, see LICENSE for more details.
 
 """
-class Actor(object):
-
-    user = None
+class CustomActor(object):
 
     def __init__(self, user):
         self.user = user
 
-    def owns(self, something):
-        return self.user.username == something.username
+    def doesnt_own(self, something):
+        return bool(something.owned_by(self.user))
 
 
 class Something(object):
@@ -24,6 +22,9 @@ class Something(object):
 
     def is_active(self):
         return self.active
+
+    def owned_by(self, user):
+        return self.username == user.username
 
 
 somethings = {

@@ -27,11 +27,15 @@ Now point your browser to http://127.0.0.1:8000
             'permissionsx.middleware.PermissionsXMiddleware',
             ...
 
-3. Add permissions to your views (which means: if user is not logged in, **redirect (->)** them to default login view):
+3. Define anonymous user class to be used:
+
+# TODO: 
+
+4. Add permissions to your views (which means: if user is not logged in, **redirect (->)** them to default login view):
 
         permissions = ['user__is_authenticated->auth_login']
 
-4. You're done!
+5. You're done!
 
 ## Syntax
 
@@ -114,11 +118,13 @@ What it does is simply assigning ```User.get_profile()``` instance to every requ
 
 You must also alternate your ```settings.py``` to point to "dummy" Profile class that will answer permissions checks with defaults for anonymous users, e.g.:
 
-    PERMISSIONS_ANONYMOUS_ACTOR = 'myapplication.profiles.models.AnonymousActor'
+# FIXME: It changed a lot due to custom User model in Django 1.5 a few things need to be rethinked.
+
+    PERMISSIONS_ANONYMOUS_ACTOR = 'myapplication.profiles.models.AnonymousUser'
 
 And in your ```models.py```:
 
-    class AnonymousActor(object):
+    class AnonymousUser(object):
 
         def has_purchased(self, document):
             return False
@@ -164,9 +170,9 @@ And the ```Document``` one by:
         def editable_by(self, profile):
             return self.author == profile or self.company == profile.company
 
-Finally, ```AnonymousActor``` may look like:
+Finally, ```AnonymousUser``` may look like:
 
-    class AnonymousActor(object):
+    class AnonymousUser(object):
         is_boss = False
         is_leader = False
         company = None

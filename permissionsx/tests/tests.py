@@ -1,12 +1,9 @@
 import os
 
-from django.conf import settings
 from django.contrib.auth.models import User
-from django.core.exceptions import ImproperlyConfigured
 from django.core.urlresolvers import reverse
 from django.test import TestCase
 from django.test.client import Client
-from django.test.utils import override_settings
 
 from permissionsx.tests.views import (
     OK_RESPONSE,
@@ -14,17 +11,6 @@ from permissionsx.tests.views import (
 )
 
 
-@override_settings(
-    MIDDLEWARE_CLASSES=(
-        'django.contrib.sessions.middleware.SessionMiddleware',
-        'django.contrib.auth.middleware.AuthenticationMiddleware',
-        'permissionsx.middleware.PermissionsXMiddleware',
-        'permissionsx.tests.middleware.PermissionsXTestActorMiddleware',
-    ),
-    TEMPLATE_DIRS=(
-        os.path.join(os.path.abspath(os.path.dirname(__file__)), 'templates'),
-    ),
-)
 class PermissionsXTests(TestCase):
     
     urls = 'permissionsx.tests.urls'
@@ -111,6 +97,7 @@ class PermissionsXTests(TestCase):
         userC.save()
         # NOTE: is_staff == False, is_superuser == False
         userD = User.objects.create_user('user-d', 'user.d@example.com', 'password')
+
         c = Client()
 
         # NOTE: Test anonymous.
@@ -169,3 +156,12 @@ class PermissionsXTests(TestCase):
         self.assertEqual(response.status_code, 200)
         response = c.get(reverse('or_permissions_ya_2_redirect'), follow=True)
         self.assertEqual(response.status_code, 200)
+
+    def test_request_context_custom_middleware(self):
+        userB = User.objects.create_user('user-b', 'user.b@example.com', 'password')
+        c = Client()
+        c.login(username='user-b', password='password')
+        response = c.get(reverse('request_context_custom_middleware', kwargs={'pk': 2}), follow=True)
+        self.assertEqual(response.status_code, 200)
+        response = c.get(reverse('request_context_custom_middleware', kwargs={'pk': 3}), follow=True)
+        self.assertEqual(response.status_code, 403)

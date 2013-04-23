@@ -5,12 +5,10 @@ PermissionsX - Authorization for Django Class-Based Views.
 :license:   BSD, see LICENSE for more details.
 
 """
-from permissionsx.tests.models import Actor
+from permissionsx.tests.models import CustomActor
 
 
-class PermissionsXTestActorMiddleware(object):
-    """Adds Actor mock for use with permissionsx."""
-    
+class PermissionsCustomRequestObjectMiddleware(object):
+
     def process_request(self, request):
-        assert hasattr(request, 'user'), 'PermissionsXTestActorMiddleware requires AuthenticationMiddleware to be installed.'
-        request.actor = Actor(request.user)
+        request.custom_actor = CustomActor(request.user)
