@@ -65,7 +65,7 @@ class OrPermissionsYa2RedirectView(DummyView):
 class CommonRequestContext(object):
 
     @staticmethod
-    def get_request_context(**kwargs):
+    def get_request_context(request, **kwargs):
         return {
             # NOTE: Just as an example, in real world this could be:
             # 'something': get_object_or_404(Something, pk=kwargs.get('pk')),

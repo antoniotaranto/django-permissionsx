@@ -112,7 +112,7 @@ There are two objects you need to have on your requests for this view: ```profil
     class DocumentRequestContext(object):
 
         @staticmethod
-        def get_request_context(**kwargs):
+        def get_request_context(request, **kwargs):
             return {
                 'document': get_object_or_404(Document, slug=kwargs.get('document_slug')),
             }
@@ -182,7 +182,7 @@ Note that there is ```AnonymousUserProfile``` assigned instead of ```UserProfile
             permissions = ['profile__has_purchased:document']
 
             @staticmethod
-            def get_request_context(**kwargs):
+            def get_request_context(request, **kwargs):
                 return {
                     'document': get_object_or_404(Document, slug=kwargs.get('document_slug')),
                 }

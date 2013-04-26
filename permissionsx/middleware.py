@@ -84,7 +84,7 @@ class PermissionsXMiddleware(object):
         else:
             view = self._views_cache[view_key]
         try:
-            objects = view.get_request_context(**view_kwargs)
+            objects = view.get_request_context(request, **view_kwargs)
         except AttributeError:
             # NOTE: There are no additional objects to be pushed into request.
             pass
