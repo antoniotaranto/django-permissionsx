@@ -8,11 +8,11 @@ This package works by extending requests with objects that are required for chec
 
 Objects may be added either by invoking static method ```get_request_context()``` on a view level, or by using custom middleware (see ```permissionsx.tests.middleware``` for example). Middleware scenario is most useful when you expect using given class/instance in most of the views.
 
-The logic is held in ```permissions``` attribute. ```PermissionsXMiddleware``` either raises ```django.core.exceptions.PermissionDenied``` or redirects to another view (by using URL name defined in ```urls.py```) if conditions are not met.
+The logic is held in ```permissions``` attribute of a ```View``` class. ```PermissionsXMiddleware``` either raises ```django.core.exceptions.PermissionDenied``` or redirects to another view (by using URL name defined in ```urls.py```) if conditions are not met.
 
 ### Working example
 
-**Have a look at the example you will find in source package.** You can run it simply by installing ```django-permissionsx``` somewhere in your Python path and by running:
+**Have a look at the example you will find in the source package.** You can run it simply by installing ```django-permissionsx``` somewhere in your Python path and by running:
 
         (example_virtualenv)demo:~/projects/django-permissionsx/example$ ./manage.py runserver
 
@@ -140,9 +140,7 @@ In Django 1.4.x there are no customizable User models, so if you need more sophi
                 except (AttributeError, ObjectDoesNotExist):
                     request.profile = AnonymousUserProfile()
 
-
 Note that there is ```AnonymousUserProfile``` assigned instead of ```UserProfile``` instance if exception is raised. This is because you must ensure the ```request.profile``` is available for each view no matter a user is anonymous or not, for the sake of consistency.
-
 
 *settings.py*:
 
@@ -190,8 +188,11 @@ Note that there is ```AnonymousUserProfile``` assigned instead of ```UserProfile
             def get_object(self):
                 return self.request.document
 
+## Coming soon
+
+* Caching permission check results.
+* Bring the same philosophy to the ORM level.
 
 ## Contact
-
 
 If there is anything I can help with, or there is something worth adding, or there are just any comments on this stuff or bugs you would like to report, please get in touch via Github, Twitter ([@thinkingpotato](http://twitter.com/thinkingpotato/)) or @freenode/#django.
