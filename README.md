@@ -1,22 +1,17 @@
 # django-permissionsx
 
-Authorization for Django Class-Based Views.
+Authorization for Django: extended, experimental, X...
 
 ## How it works
 
-This package works by extending requests with objects that are required for checking permissions. These may be objects referenced by specific URL (e.g. slug or PK lookups) or objects performing checks on other objects (e.g. ```User``` instance which is available by default in each request).
+This package works by leveraging the fact that Django request object is easily accessible and usually holds enough information to perform authorization process. No more ```has_perm```, assigning to groups etc. Maybe you like it, I just can't get used to it.
 
-Objects may be added either by invoking static method ```get_request_context()``` on a view level, or by using custom middleware (see ```permissionsx.tests.middleware``` for example). Middleware scenario is most useful when you expect using given class/instance in most of the views.
+If the request object has no information you need to check permissions, you may use middleware. For example, if ```settings.AUTH_PROFILE_MODULE``` is enabled, ```permissionsx.middleware.PermissionsXProfileMiddleware``` copies user's profile to the request object (so it can be later used for checking permissions, see below) and if the user is anonymous - it attaches an instance of ```AnonymousProfile```.
 
-The logic is held in ```permissions``` attribute of a ```View``` class. ```PermissionsXMiddleware``` either raises ```django.core.exceptions.PermissionDenied``` or redirects to another view (by using URL name defined in ```urls.py```) if conditions are not met.
+I was trying to do my best to follow Django conventions. You will find that defining permissions is similar to filtering QuerySets.
 
-### Working example
+Currently ```django-permissionsx``` can be used with Django class-based views and ```django-tastypie``` authorization. What is cool about this approach, is that you define your inheritable and mixable permissions **once** and use them both in views and API calls! And it's easily customizable, so you may expect new extensions coming soon.
 
-**Have a look at the example you will find in the source package.** You can run it simply by installing ```django-permissionsx``` somewhere in your Python path and by running:
-
-        (example_virtualenv)demo:~/projects/django-permissionsx/example$ ./manage.py runserver
-
-Now point your browser to http://127.0.0.1:8000
 
 ## Installation
 
@@ -24,171 +19,148 @@ Now point your browser to http://127.0.0.1:8000
 
         pip install django-permissionsx
 
-2. Add a new middleware:
+2. Add a middleware (if using 1-1 profiles):
 
         MIDDLEWARE_CLASSES = (
             ...
-            'permissionsx.middleware.PermissionsXMiddleware',
-            ...
+            'permissionsx.middleware.PermissionsXProfileMiddleware',
+        )
 
-3. Add permissions to your views (which means: if user is not logged in, **redirect (->)** them to default login view):
+3. Add permissions to your views, e.g.:
 
-        permissions = ['user__is_authenticated->auth_login']
+        from permissionsx.contrib.django_permissions import PermissionsViewMixin
+        from permissionsx.models import P
+        from permissionsx.models import Permissions
 
-4. You're done!
+
+        class UserPermissions(Permissions):
+
+            permissions = P(user__is_authenticated=True)
+
+
+        class PublicListView(PermissionsViewMixin, ListView):
+
+            queryset = Item.objects.all()
+            permissions = UserPermissions
+
+4. If you are not going to reuse your permissions you can also use a simplified syntax:
+
+        class RestrictedListView(PermissionsViewMixin, ListView):
+
+            queryset = Item.objects.all()
+            permissions = P(user__is_staff) | P(profile__full_name='The Boss')
+
+
+5. And you're done!
 
 ## Examples
 
-Here is a list of some use cases you may be interested in:
 
-        permissions = ['user__is_authenticated']
-        permissions = ['user__is_authenticated->auth_login']
-        permissions = ['user__is_authenticated', 'profile__is_boss']
-        permissions = ['user__is_authenticated->auth_login', ('test_scenario__assigned_to:profile', 'profile__is_engineer', 'profile__is_manager')]
-        permissions = ['profile__owns:document']
-        permissions = ['profile__has_purchased:document']
-        permissions = ['document__is_published']
-
-## Syntax
-
-Permissions are defined by setting ```permissions``` attribute on a view class.
-
-### Basic permission
-
-#### Ex.:
-        permissions = ['user__is_authenticated']
-
-### Redirects
-
-#### Ex.:
-        permissions = ['user__is_authenticated->auth_login']
-
-If permission check ```is_authenticated``` fails, user will be redirected to URL named ```auth_login```.
-        
-### Multiple permissions
-
-#### Ex.:
-        permissions = ['user__is_authenticated', 'profile__is_boss']
-
-These permissions will be checked according to the order of the list. If the first one fails, and there is no redirect defined, ```permissionsx``` will raise ```PermissionDenied``` exception.
-
-### Multiple permissions where only one needs to be ```True``` (boolean OR)
-
-#### Ex.:
-        permissions = ['user__is_authenticated->login', ('test__assigned_to:profile', 'profile__is_engineer')]
-
-In this case user will be able to access the view if:
-
-* is logged in (default Django authorization mechanism);
-* ```self.request.test.assigned_to(self.request.profile) == True```;
-* ```self.request.profile.is_engineer == True```.
-
-If the user is not logged in, they will be instantly redirected to login page.
-
-### Relations with other request objects
-
-#### Ex.:
-        permissions = ['profile__owns:document']
-
-This is essentially a shortcut for saying:
-
-* ```self.request.profile.owns(self.request.document)```
-
-Where:
+### accounts/models.py
 
         class Profile(models.Model):
-                [...]
-                def owns(self, obj):
-                            return obj.owner == self
 
-### Explanation of double underscore (*__owns):
+            user = models.OneToOneField('auth.User')
+            is_author = models.BooleanField()
+            is_editor = models.BooleanField()
+            is_administrator = models.BooleanField()
 
-In case of:
+### accounts/permissions.py
 
-    permissions = ['profile__owns:document']
-
-There are two objects you need to have on your requests for this view: ```profile``` and ```document```. ```Profile``` can ba managed using middleware above, while ```document``` needs to be added for this view specifcally. This is usually requirement for other views, so you can use is a simple mixin class:
-
-    class DocumentRequestContext(object):
-
-        @staticmethod
-        def get_request_context(request, **kwargs):
-            return {
-                'document': get_object_or_404(Document, slug=kwargs.get('document_slug')),
-            }
-
-And then:
-
-        class DocumentUpdateView(UpdateView, DocumentRequestContext):
-                [...]
-
-## Custom middleware
-
-In Django 1.4.x there are no customizable User models, so if you need more sophisticated authorization logic than ```is_staff``` or ```is_authenticated```, you would use middleware to attach ```Profile``` instance to each request, e.g.:
-
-*middleware.py*:
-
-        from yourproject.app.models import AnonymousUserProfile
+        from permissionsx.models import Permissions
+        from permissionsx.models import P
 
 
-        class PermissionsXProfileMiddleware(object):
+        class UserPermissions(Permissions):
 
-            def process_request(self, request):
-                assert hasattr(request, 'user'), 'PermissionsXProfileMiddleware requires AuthenticationMiddleware to be installed.'
-                try:        
-                    request.profile = request.user.get_profile()
-                except (AttributeError, ObjectDoesNotExist):
-                    request.profile = AnonymousUserProfile()
+            permissions = P(user__is_authenticated=True)
 
-Note that there is ```AnonymousUserProfile``` assigned instead of ```UserProfile``` instance if exception is raised. This is because you must ensure the ```request.profile``` is available for each view no matter a user is anonymous or not, for the sake of consistency.
 
-*settings.py*:
+        class AuthorPermissions(Permissions):
 
-        MIDDLEWARE_CLASSES = (
-            'django.middleware.common.CommonMiddleware',
-            'django.contrib.sessions.middleware.SessionMiddleware',
-            'django.contrib.auth.middleware.AuthenticationMiddleware',
-            'yourproject.app.middleware.PermissionsXProfileMiddleware',
-            'permissionsx.middleware.PermissionsXMiddleware',
-            [...]
+            permissions = P(profile__is_author=True) | P(profile__is_editor=True) | P(profile__is_administrator=True)
+
+
+        class StaffPermissions(Permissions):
+
+            permissions = P(profile__is_editor=True) | P(profile__is_administrator=True)
+
+
+        class VariaPermissions(Permissions):
+
+            def get_permissions(self, request=None):
+                # NOTE: Please note that the rules below make no sense.
+                return ~P(profile__is_editor=True) & P(P(user__pk=request.user.pk) | P(user__username='Mary'))
+
+### articles/views.py
+
+        from permissionsx.contrib.django_permissions import PermissionsViewMixin
+
+        from newspaper.accounts.permissions import (
+            AuthorPermissions,
+            StaffPermissions,
         )
 
-*models.py*:
 
-        class Document(models.Model):
+        class ArticleListView(PermissionsViewMixin, ListView):
 
-            user = models.ForeignKey('auth.User')
-
-
-        class UserProfile(models.Model):
-
-            def has_purchased(self, document):
-                return document.user == self.user
+            queryset = Article.objects.filter(is_published=True)
+            permissions = AuthorPermissions
 
 
-        class AnonymousUserProfile(object):
+        class ArticleDeleteView(PermissionsViewMixin, DeleteView):
 
-            def has_purchased(self, document):
-                return False
+            model = Article
+            success_url = reverse_lazy('article_list')
+            permissions = StaffPermissions
 
-*view.py*:
+### articles/api.py (Tastypie)
 
-        class DocumentUpdateView(UpdateView):
+        from permissionsx.contrib.tastypie_permissions import PermissionsAuthorization
 
-            template_name = 'documents/document_edit.html'
-            form_class = DocumentCreateUpdateForm
-            permissions = ['profile__has_purchased:document']
+        from newspaper.profiles.permissions import UserPermissions
+        from newspaper.profiles.permissions import StaffPermissions
+        from newspaper.articles.models import Article
+        from newspaper.articles.models import Comment
 
-            @staticmethod
-            def get_request_context(request, **kwargs):
-                return {
-                    'document': get_object_or_404(Document, slug=kwargs.get('document_slug')),
-                }
 
-            def get_object(self):
-                return self.request.document
+        class StaffOnlyAuthorization(PermissionsAuthorization):
 
-## Coming soon
+            permissions = StaffPermissions
+
+
+        class CommentingAuthorization(PermissionsAuthorization):
+
+            permissions = UserPermissions
+
+            def create_list(self, object_list, bundle):
+                raise Unauthorized()
+
+            def update_list(self, object_list, bundle):
+                raise Unauthorized()
+
+            def update_detail(self, object_list, bundle):
+                # NOTE: This overrides `self.permissions` just for this single case.
+                return self.check_permissions(bundle.request, StaffPermissions)
+
+            def delete_list(self, object_list, bundle):
+                raise Unauthorized()
+
+            def delete_detail(self, object_list, bundle):
+                raise Unauthorized()
+
+## CHANGELOG
+
+### 0.0.8
+
+* This version is backward **incompatible**.
+* Changed syntax to follow QuerySet filtering convention.
+* Sadly, tests are gone. Need to write new ones, what will not happen until 1.0.0 release.
+* Example project's gone. Will be back at a different URL.
+* ```PERMISSIONSX_DEFAULT_URL``` was renamed to ```PERMISSIONSX_REDIRECT_URL```.
+* New setting was added: ```PERMISSIONSX_LOGOUT_IF_DENIED```.
+
+## Coming soon (?)
 
 * Caching permission check results.
 * Bring the same philosophy to the ORM level.

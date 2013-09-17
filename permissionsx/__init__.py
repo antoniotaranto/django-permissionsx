@@ -1,14 +1,13 @@
 """
-PermissionsX - Authorization for Django Class-Based Views.
+PermissionsX - Authorization for Django.
 
 :copyright: Copyright (c) 2013 by Robert Pogorzelski.
 :license:   BSD, see LICENSE for more details.
 
 """
-import os
 import sys
 
-VERSION = (0, 0, 6)
+VERSION = (0, 0, 8)
 
 __version__ = ".".join(map(str, VERSION[0:3])) + "".join(VERSION[3:])
 __author__ = "Robert Pogorzelski <thinkingpotato@gmail.com>"

@@ -1,5 +1,5 @@
 """
-PermissionsX - Authorization for Django Class-Based Views.
+PermissionsX - Authorization for Django.
 
 :copyright: Copyright (c) 2013 by Robert Pogorzelski.
 :license:   BSD, see LICENSE for more details.
@@ -15,7 +15,7 @@ version = __import__('permissionsx').__version__
 setup(
     name='django-permissionsx',
     version=version,
-    description='Authorization for Django Class-Based Views.',
+    description='Authorization for Django.',
     author='Robert Pogorzelski',
     author_email='thinkingpotato@gmail.com',
     url='http://github.com/thinkingpotato/django-permissionsx',
@@ -34,5 +34,4 @@ setup(
         'Topic :: Software Development :: Libraries',
     ],
     install_requires=[],
-    test_suite='runtests',
 )
