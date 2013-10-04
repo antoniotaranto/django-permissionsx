@@ -5,42 +5,47 @@ PermissionsX - Authorization for Django.
 :license:   BSD, see LICENSE for more details.
 
 """
-from permissionsx.core import PermissionBase
+from __future__ import absolute_import
 
 from tastypie.authorization import Authorization
 from tastypie.exceptions import Unauthorized
 
 
-class PermissionsAuthorization(PermissionBase, Authorization):
+__all__ = ['TastypieAuthorization']
+
+
+class TastypieAuthorization(Authorization):
+
+    def __init__(self, *args, **kwargs):
+        super(TastypieAuthorization, self).__init__(*args, **kwargs)
+        self.permissions = self.permissions_class()
 
     def read_list(self, object_list, bundle):
-        if self.check_permissions(bundle.request):
+        if self.permissions.check_permissions(bundle.request):
             return object_list
         raise Unauthorized()
 
     def read_detail(self, object_list, bundle):
-        return self.check_permissions(bundle.request)
+        return self.permissions.check_permissions(bundle.request)
 
     def create_list(self, object_list, bundle):
-        if self.check_permissions(bundle.request):
+        if self.permissions.check_permissions(bundle.request):
             return object_list
         raise Unauthorized()
 
     def create_detail(self, object_list, bundle):
-        return self.check_permissions(bundle.request)
+        return self.permissions.check_permissions(bundle.request)
 
     def update_list(self, object_list, bundle):
-        if self.check_permissions(bundle.request):
+        if self.permissions.check_permissions(bundle.request):
             return object_list
         raise Unauthorized()
 
     def update_detail(self, object_list, bundle):
-        return self.check_permissions(bundle.request)
+        return self.permissions.check_permissions(bundle.request)
 
     def delete_list(self, object_list, bundle):
-        return self.check_permissions(bundle.request)
+        return self.permissions.check_permissions(bundle.request)
 
     def delete_detail(self, object_list, bundle):
-        return self.check_permissions(bundle.request)
-
-
+        return self.permissions.check_permissions(bundle.request)

@@ -10,26 +10,18 @@ If the request object has no information you need to check permissions, you may 
 
 I was trying to do my best to follow Django conventions. You will find that defining permissions is similar to filtering QuerySets.
 
-Currently ```django-permissionsx``` can be used with Django class-based views and ```django-tastypie``` authorization. What is cool about this approach, is that you define your inheritable and mixable permissions **once** and use them both in views and API calls! And it's easily customizable, so you may expect new extensions coming soon.
+Currently ```django-permissionsx``` can be used with Django class-based views, templates and ```django-tastypie``` authorization. What is cool about this approach, is that you define your inheritable and mixable permissions **once** and use them both in views and API calls! And it's easily customizable, so you may expect new extensions coming soon.
 
 
-## Installation
+## Installation & Usage
 
 1. Install ```django-permissionsx``` package:
 
         pip install django-permissionsx
 
-2. Add a middleware (if using 1-1 profiles):
+2. Add permissions to your views, e.g.:
 
-        MIDDLEWARE_CLASSES = (
-            ...
-            'permissionsx.middleware.PermissionsXProfileMiddleware',
-        )
-
-3. Add permissions to your views, e.g.:
-
-        from permissionsx.contrib.django_permissions import PermissionsViewMixin
-        from permissionsx.models import P
+        from permissionsx.contrib.django import DjangoViewMixin
         from permissionsx.models import Permissions
 
 
@@ -38,25 +30,18 @@ Currently ```django-permissionsx``` can be used with Django class-based views an
             permissions = P(user__is_authenticated=True)
 
 
-        class PublicListView(PermissionsViewMixin, ListView):
+        class PublicListView(DjangoViewMixin, ListView):
 
             queryset = Item.objects.all()
-            permissions = UserPermissions
-
-4. If you are not going to reuse your permissions you can also use a simplified syntax:
-
-        class RestrictedListView(PermissionsViewMixin, ListView):
-
-            queryset = Item.objects.all()
-            permissions = P(user__is_staff) | P(profile__full_name='The Boss')
+            permissions_class = UserPermissions
 
 
-5. And you're done!
+3. And you're done!
 
-## Examples
+## More examples
 
 
-### accounts/models.py
+### profiles/models.py
 
         class Profile(models.Model):
 
@@ -65,10 +50,26 @@ Currently ```django-permissionsx``` can be used with Django class-based views an
             is_editor = models.BooleanField()
             is_administrator = models.BooleanField()
 
-### accounts/permissions.py
+        class AnonymousProfile(object):
 
-        from permissionsx.models import Permissions
-        from permissionsx.models import P
+            user = None
+            is_author = False
+            is_editor = False
+            is_administrator = False
+
+### profiles/permissions.py
+
+        from newspaper.profiles.models import AnonymousProfile
+        from newspaper.articles.models import Article
+
+
+        class ProfilePermissions(Permissions):
+
+            def set_request_objects(self, request, **kwargs):
+                if request.user.is_authenticated():
+                    request.profile = request.user.get_profile()
+                else:
+                    request.profile = AnonymousProfile()
 
 
         class UserPermissions(Permissions):
@@ -76,15 +77,23 @@ Currently ```django-permissionsx``` can be used with Django class-based views an
             permissions = P(user__is_authenticated=True)
 
 
-        class AuthorPermissions(Permissions):
+        class AuthorPermissions(ProfilePermissions):
 
             permissions = P(profile__is_author=True) | P(profile__is_editor=True) | P(profile__is_administrator=True)
 
 
-        class StaffPermissions(Permissions):
+        class StaffPermissions(ProfilePermissions):
 
             permissions = P(profile__is_editor=True) | P(profile__is_administrator=True)
 
+
+        class AuthorIfNotPublishedPermissions(ProfilePermissions):
+
+            permissions = P(profile__is_editor=True) | P(profile__is_administrator=True) | P(P(profile__is_author=True) & P(article__is_published=False))
+
+            def set_request_objects(self, request, **kwargs):
+                super(AuthorIfNotPublishedPermissions, self).set_request_objects(request, **kwargs)
+                request.article = Article.objects.get(slug=kwargs.get('slug'))
 
         class VariaPermissions(Permissions):
 
@@ -94,29 +103,49 @@ Currently ```django-permissionsx``` can be used with Django class-based views an
 
 ### articles/views.py
 
-        from permissionsx.contrib.django_permissions import PermissionsViewMixin
+        from permissionsx.contrib.django import DjangoViewMixin
 
-        from newspaper.accounts.permissions import (
+        from newspaper.profiles.permissions import (
             AuthorPermissions,
             StaffPermissions,
         )
 
 
-        class ArticleListView(PermissionsViewMixin, ListView):
+        class ArticleListView(DjangoViewMixin, ListView):
 
             queryset = Article.objects.filter(is_published=True)
-            permissions = AuthorPermissions
+            permissions_class = AuthorPermissions
 
 
-        class ArticleDeleteView(PermissionsViewMixin, DeleteView):
+        class ArticleDeleteView(DjangoViewMixin, DeleteView):
 
             model = Article
             success_url = reverse_lazy('article_list')
-            permissions = StaffPermissions
+            permissions_class = StaffPermissions
+
+### articles/templates/articles/comment_list.html
+
+        {% load permissionsx_tags %}
+
+        {% permissions "newspaper.profiles.permissions.StaffPermissions" as comment_blocking_granted %}
+
+        {% if comment_blocking_granted %}
+            <a href="#" class="btn block-comment" data-comment-id="{{ comment.pk }}">Block this comment</a>
+        {% endif %}
+
+        {% comment %}NOTE: Checks permissions for objects in a list.{% endcomment %}
+        {% for object in object_list %}
+            {% permissions "newspaper.profiles.permissions.AuthorIfNotPublishedPermissions" slug=object.slug as can_change_object_granted %}
+            {% if can_change_object_granted %}
+                <a href="{% url 'article_update' object.slug %}" class="bt btnn-success">Edit</a>
+                <a href="{% url 'article_delete' object.slug %}" class="btn btn-danger">Delete</a>
+            {% endif %}
+                <a href="{% url 'article_view' object.slug %}" class="btn btn-whatever">View</a>
+        {% endfor $}
 
 ### articles/api.py (Tastypie)
 
-        from permissionsx.contrib.tastypie_permissions import PermissionsAuthorization
+        from permissionsx.contrib.tastypie import TastypieAuthorization
 
         from newspaper.profiles.permissions import UserPermissions
         from newspaper.profiles.permissions import StaffPermissions
@@ -124,12 +153,12 @@ Currently ```django-permissionsx``` can be used with Django class-based views an
         from newspaper.articles.models import Comment
 
 
-        class StaffOnlyAuthorization(PermissionsAuthorization):
+        class StaffOnlyAuthorization(TastypieAuthorization):
 
             permissions = StaffPermissions
 
 
-        class CommentingAuthorization(PermissionsAuthorization):
+        class CommentingAuthorization(TastypieAuthorization):
 
             permissions = UserPermissions
 
@@ -141,7 +170,7 @@ Currently ```django-permissionsx``` can be used with Django class-based views an
 
             def update_detail(self, object_list, bundle):
                 # NOTE: This overrides `self.permissions` just for this single case.
-                return self.check_permissions(bundle.request, StaffPermissions)
+                return StaffPermissions().check_permissions(bundle.request)
 
             def delete_list(self, object_list, bundle):
                 raise Unauthorized()
@@ -150,6 +179,14 @@ Currently ```django-permissionsx``` can be used with Django class-based views an
                 raise Unauthorized()
 
 ## CHANGELOG
+
+### 0.0.9
+
+* Renamed class-level `permissions` to `permissions_class`.
+* Dropped support for simple permissions defining for the benefit of greater flexibility.
+* Renaming and refactoring, again. Good stuff: managed to get rid of middleware and a class. Things got largely simplified in general.
+* Added support for Django templates, including per-object checks.
+* Requirement: django-classy-tags.
 
 ### 0.0.8
 
@@ -162,6 +199,7 @@ Currently ```django-permissionsx``` can be used with Django class-based views an
 
 ## Coming soon (?)
 
+* Permissions for URLs and building menus.
 * Caching permission check results.
 * Bring the same philosophy to the ORM level.
 

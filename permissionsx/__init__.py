@@ -7,7 +7,7 @@ PermissionsX - Authorization for Django.
 """
 import sys
 
-VERSION = (0, 0, 8)
+VERSION = (0, 0, 9)
 
 __version__ = ".".join(map(str, VERSION[0:3])) + "".join(VERSION[3:])
 __author__ = "Robert Pogorzelski <thinkingpotato@gmail.com>"

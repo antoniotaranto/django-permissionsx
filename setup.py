@@ -23,7 +23,7 @@ setup(
     platforms=['OS Independent'],
     packages=find_packages(),
     classifiers=[
-        'Development Status :: 2 - Pre-Alpha',
+        'Development Status :: 3 - Alpha',
         'Environment :: Web Environment',
         'Framework :: Django',
         'Intended Audience :: Developers',
@@ -33,5 +33,7 @@ setup(
         'Topic :: Software Development',
         'Topic :: Software Development :: Libraries',
     ],
-    install_requires=[],
+    install_requires=[
+        'django-classy-tags >= 0.4',
+    ],
 )

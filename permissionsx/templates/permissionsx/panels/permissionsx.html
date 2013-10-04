@@ -1,0 +1,39 @@
+{% load i18n %}
+
+<h4>{% trans "Permissions information" %}</h4>
+<table>
+	<thead>
+		<tr>
+			<th>{% trans "View" %}</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr>
+			<td>{{ view_name }}</td>
+		</tr>
+	</tbody>
+</table>
+<table>
+	<thead>
+		<tr>
+			<th>{% trans "Permissions class" %}</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr>
+			<td>{{ view_permissions }}</td>
+		</tr>
+	</tbody>
+</table>
+<table>
+	<thead>
+		<tr>
+			<th>{% trans "Details" %}</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr>
+			<td>{{ view_rules }}</td>
+		</tr>
+	</tbody>
+</table>
