@@ -58,6 +58,25 @@ Currently ```django-permissionsx``` can be used with Django class-based views, t
 
 6. You're done!
 
+## Settings
+
+**PERMISSIONSX_REDIRECT_URL**
+
+Defaults to `settings.LOGIN_URL`.
+
+If user has not been granted permission to access a Django view, redirect to `PERMISSIONSX_REDIRECT_URL`.
+
+**PERMISSIONSX_LOGOUT_IF_DENIED**
+
+Defaults to `False`.
+
+If user has not been granted permission to access a Django view, log the user out before redirecting to `PERMISSIONSX_REDIRECT_URL`.
+
+## Things good to know
+
+* If a user is being redirected while not being logged in (`request.user.is_authenticated()`), current `request.path` will be added to the URL as `next` parameter.
+
+
 ## More examples
 
 
