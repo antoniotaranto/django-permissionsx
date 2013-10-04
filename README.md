@@ -10,7 +10,7 @@ If the request object has no information you need to check permissions, you can 
 
 I was trying to do my best to follow Django conventions. You will find that defining permissions is similar to filtering QuerySets.
 
-Currently ```django-permissionsx``` can be used with Django class-based views, templates and ```django-tastypie``` authorization. What is cool about this approach, is that you define your inheritable and mixable permissions **once** and use them both in views and API calls! And it's easily customizable, so you may expect new extensions coming soon.
+Currently ```django-permissionsx``` can be used with Django class-based views, templates and ```django-tastypie``` authorization. What is cool about this approach, is that you define your inheritable and mixable permissions **once** and use them in views, templates and API calls! And it's easily customizable, so you may expect new extensions coming soon.
 
 
 ## Installation & Usage
@@ -40,7 +40,7 @@ Currently ```django-permissionsx``` can be used with Django class-based views, t
             queryset = Item.objects.all()
             permissions_class = UserPermissions
 
-4. Don't forget to add it to your `INSTALLED_APPS`:
+4. Don't forget to add `permissionsx` to your `INSTALLED_APPS`:
 
         INSTALLED_APPS = (
             'django.contrib.admin',

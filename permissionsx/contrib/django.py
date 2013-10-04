@@ -28,6 +28,8 @@ class PermissionsRedirectView(RedirectView):
     permanent = False
 
     def get_redirect_url(self, **kwargs):
+        if self.request.user.is_authenticated():
+            return settings.PERMISSIONSX_REDIRECT_URL
         return settings.PERMISSIONSX_REDIRECT_URL + '?next=' + self.request.path
 
 
@@ -40,7 +42,7 @@ class DjangoViewMixin(object):
                 return super(DjangoViewMixin, self).dispatch(request, *args, **kwargs)
             elif settings.PERMISSIONSX_LOGOUT_IF_DENIED:
                 auth.logout(request)
-                return PermissionsRedirectView.as_view()(request, *args, **kwargs)
+            return PermissionsRedirectView.as_view()(request, *args, **kwargs)
         return super(DjangoViewMixin, self).dispatch(request, *args, **kwargs)
 
 
