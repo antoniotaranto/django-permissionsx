@@ -6,7 +6,7 @@ Authorization for Django: extended, experimental, X...
 
 This package works by leveraging the fact that Django request object is easily accessible and usually holds enough information to perform authorization process. No more ```has_perm```, assigning to groups etc. Maybe you like it, I just can't get used to it.
 
-If the request object has no information you need to check permissions, you may use middleware. For example, if ```settings.AUTH_PROFILE_MODULE``` is enabled, ```permissionsx.middleware.PermissionsXProfileMiddleware``` copies user's profile to the request object (so it can be later used for checking permissions, see below) and if the user is anonymous - it attaches an instance of ```AnonymousProfile```.
+If the request object has no information you need to check permissions, you can add it at the `Permissions` class level using `set_request_objects()` method.
 
 I was trying to do my best to follow Django conventions. You will find that defining permissions is similar to filtering QuerySets.
 
