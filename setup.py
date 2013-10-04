@@ -22,6 +22,7 @@ setup(
     license='BSD',
     platforms=['OS Independent'],
     packages=find_packages(),
+    package_data={str('permissionsx'): [str('templates/permissionsx/panels/*')]},
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Environment :: Web Environment',
