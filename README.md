@@ -35,8 +35,23 @@ Currently ```django-permissionsx``` can be used with Django class-based views, t
             queryset = Item.objects.all()
             permissions_class = UserPermissions
 
+3. Don't forget to add it to your `INSTALLED_APPS`:
 
-3. And you're done!
+        INSTALLED_APPS = (
+            'django.contrib.admin',
+            'django.contrib.auth',
+            'django.contrib.staticfiles',
+            [...]
+            'permissionsx',
+
+4. Also, you may find `django-debug-toolbar` helpful in assigning right permissions, just add:
+
+        DEBUG_TOOLBAR_PANELS = (
+            [...]
+            'permissionsx.contrib.django_debug_toolbar.PermissionsDebugPanel',
+        )
+
+5. You're done!
 
 ## More examples
 
@@ -155,12 +170,12 @@ Currently ```django-permissionsx``` can be used with Django class-based views, t
 
         class StaffOnlyAuthorization(TastypieAuthorization):
 
-            permissions = StaffPermissions
+            permissions_class = StaffPermissions
 
 
         class CommentingAuthorization(TastypieAuthorization):
 
-            permissions = UserPermissions
+            permissions_class = UserPermissions
 
             def create_list(self, object_list, bundle):
                 raise Unauthorized()
