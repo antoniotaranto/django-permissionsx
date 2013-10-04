@@ -19,9 +19,9 @@ Currently ```django-permissionsx``` can be used with Django class-based views, t
 
         pip install django-permissionsx
 
-2. Add permissions to your views, e.g.:
+2. Define permissions in a module of your choice (like permissions.py):
 
-        from permissionsx.contrib.django import DjangoViewMixin
+        from permissionsx.models import P
         from permissionsx.models import Permissions
 
 
@@ -29,13 +29,18 @@ Currently ```django-permissionsx``` can be used with Django class-based views, t
 
             permissions = P(user__is_authenticated=True)
 
+3. Add permissions to your views, e.g.:
+
+        from your_project.permissions import UserPermissions
+        from permissionsx.contrib.django import DjangoViewMixin
+
 
         class PublicListView(DjangoViewMixin, ListView):
 
             queryset = Item.objects.all()
             permissions_class = UserPermissions
 
-3. Don't forget to add it to your `INSTALLED_APPS`:
+4. Don't forget to add it to your `INSTALLED_APPS`:
 
         INSTALLED_APPS = (
             'django.contrib.admin',
@@ -44,14 +49,14 @@ Currently ```django-permissionsx``` can be used with Django class-based views, t
             [...]
             'permissionsx',
 
-4. Also, you may find `django-debug-toolbar` helpful in assigning right permissions, just add:
+5. Also, you may find `django-debug-toolbar` helpful in assigning right permissions, just add:
 
         DEBUG_TOOLBAR_PANELS = (
             [...]
             'permissionsx.contrib.django_debug_toolbar.PermissionsDebugPanel',
         )
 
-5. You're done!
+6. You're done!
 
 ## More examples
 
@@ -73,6 +78,9 @@ Currently ```django-permissionsx``` can be used with Django class-based views, t
             is_administrator = False
 
 ### profiles/permissions.py
+
+        from permissionsx.models import P
+        from permissionsx.models import Permissions
 
         from newspaper.profiles.models import AnonymousProfile
         from newspaper.articles.models import Article
