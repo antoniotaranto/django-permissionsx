@@ -128,15 +128,6 @@ If user has not been granted permission to access a Django view, log the user ou
 
             permissions = P(profile__is_editor=True) | P(profile__is_administrator=True)
 
-
-        class AuthorIfNotPublishedPermissions(ProfilePermissions):
-
-            permissions = P(profile__is_editor=True) | P(profile__is_administrator=True) | P(P(profile__is_author=True) & P(article__is_published=False))
-
-            def set_request_objects(self, request, **kwargs):
-                super(AuthorIfNotPublishedPermissions, self).set_request_objects(request, **kwargs)
-                request.article = Article.objects.get(slug=kwargs.get('slug'))
-
         class VariaPermissions(Permissions):
 
             def get_permissions(self, request=None):
@@ -235,6 +226,22 @@ If user has not been granted permission to access a Django view, log the user ou
             form_class = ArticleCreateForm
             permissions_class = StaffPermissions
             permissions_response_class = NotStaffRedirectView
+
+
+### Reusing and passing variables to permissions (articles/permissions.py)
+
+        editor_or_administrator = P(profile__is_editor=True) | P(profile__is_administrator=True)
+
+        class AuthorIfNotPublishedPermissions(ProfilePermissions):
+
+            permissions = editor_or_administrator
+
+            def get_permissions(self, request=None):
+                return self.permissions | P(P(profile__is_author=True) & P(article__is_published=False) & P(article__author=request.user))
+
+            def set_request_objects(self, request, **kwargs):
+                super(AuthorIfNotPublishedPermissions, self).set_request_objects(request, **kwargs)
+                request.article = Article.objects.get(slug=kwargs.get('slug'))
 
 
 ## CHANGELOG
