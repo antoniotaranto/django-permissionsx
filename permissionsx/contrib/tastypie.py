@@ -11,9 +11,6 @@ from tastypie.authorization import Authorization
 from tastypie.exceptions import Unauthorized
 
 
-__all__ = ['TastypieAuthorization']
-
-
 class TastypieAuthorization(Authorization):
 
     def __init__(self, *args, **kwargs):

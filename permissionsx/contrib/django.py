@@ -9,7 +9,9 @@ from __future__ import absolute_import
 
 from django import template
 from django.contrib import auth
-from django.views.generic import RedirectView
+from django.contrib import messages
+from django.views.generic import RedirectView as DjangoRedirectView
+from django.views.generic import View
 
 from classytags.core import Options
 from classytags.arguments import Argument
@@ -20,20 +22,36 @@ from permissionsx import settings
 from permissionsx.utils import get_class
 
 
-__all__ = ['DjangoViewMixin']
-
-
-class PermissionsRedirectView(RedirectView):
+class RedirectView(DjangoRedirectView):
 
     permanent = False
+    redirect_url = None
 
     def get_redirect_url(self, **kwargs):
+        if self.redirect_url is None:
+            self.redirect_url = settings.PERMISSIONSX_REDIRECT_URL
         if self.request.user.is_authenticated():
-            return settings.PERMISSIONSX_REDIRECT_URL
-        return settings.PERMISSIONSX_REDIRECT_URL + '?next=' + self.request.path
+            return self.redirect_url
+        return self.redirect_url + '?next=' + self.request.path
+
+
+class MessageRedirectView(RedirectView):
+
+    message = (None, None)
+
+    def get_message(self, request=None):
+        return self.message
+
+    def get(self, request, *args, **kwargs):
+        msg_func, msg = self.get_message(request)
+        if msg is not None:
+            msg_func(request, msg)
+        return super(MessageRedirectView, self).get(request, *args, **kwargs)
 
 
 class DjangoViewMixin(object):
+
+    permissions_response_class = RedirectView
 
     def dispatch(self, request, *args, **kwargs):
         if hasattr(self, 'permissions_class'):
@@ -42,7 +60,7 @@ class DjangoViewMixin(object):
                 return super(DjangoViewMixin, self).dispatch(request, *args, **kwargs)
             elif settings.PERMISSIONSX_LOGOUT_IF_DENIED:
                 auth.logout(request)
-            return PermissionsRedirectView.as_view()(request, *args, **kwargs)
+            return self.permissions_response_class.as_view()(request, *args, **kwargs)
         return super(DjangoViewMixin, self).dispatch(request, *args, **kwargs)
 
 

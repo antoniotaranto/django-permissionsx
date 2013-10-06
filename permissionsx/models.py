@@ -11,6 +11,8 @@ from django.core.exceptions import ImproperlyConfigured
 
 class Permissions(object):
 
+    permissions = None
+
     def permissions_evaluate(self, request, expression, argument=None):
         obj, method = expression.split('__')
         try:
@@ -45,10 +47,7 @@ class Permissions(object):
                 return not False in children_results
 
     def get_permissions(self, request=None):
-        try:
-            return self.permissions
-        except AttributeError:
-            raise ImproperlyConfigured('Missing permissions for class "{}"!'.format(self.__class__.__name__))
+        return self.permissions
 
     def set_request_objects(self, request, **kwargs):
         pass
@@ -56,7 +55,9 @@ class Permissions(object):
     def check_permissions(self, request=None, **kwargs):
         self.set_request_objects(request, **kwargs)
         permissions = self.get_permissions(request)
-        return self.tree_traversal(request, permissions)
+        if permissions:
+            return self.tree_traversal(request, permissions)
+        return True
 
 
 class P(Q):
