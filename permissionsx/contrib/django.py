@@ -32,7 +32,7 @@ class RedirectView(DjangoRedirectView):
             self.redirect_url = settings.PERMISSIONSX_REDIRECT_URL
         if self.request.user.is_authenticated():
             return self.redirect_url
-        return self.redirect_url + '?next=' + self.request.path
+        return self.redirect_url + '?next=' + self.request.get_full_path()
 
 
 class MessageRedirectView(RedirectView):
@@ -51,6 +51,7 @@ class MessageRedirectView(RedirectView):
 
 class DjangoViewMixin(object):
 
+    permissions_class = None
     permissions_response_class = RedirectView
 
     def dispatch(self, request, *args, **kwargs):
