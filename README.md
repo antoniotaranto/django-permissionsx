@@ -238,13 +238,3 @@ If user has not been granted permission to access a Django view, log the user ou
 * Example project's gone. Will be back at a different URL.
 * ```PERMISSIONSX_DEFAULT_URL``` was renamed to ```PERMISSIONSX_REDIRECT_URL```.
 * New setting was added: ```PERMISSIONSX_LOGOUT_IF_DENIED```.
-
-## Coming soon (?)
-
-* Permissions for URLs and building menus.
-* Caching permission check results.
-* Bring the same philosophy to the ORM level.
-
-## Contact
-
-If there is anything I can help with, or there is something worth adding, or there are just any comments on this stuff or bugs you would like to report, please get in touch via Github, Twitter ([@thinkingpotato](http://twitter.com/thinkingpotato/)) or @freenode/#django.
