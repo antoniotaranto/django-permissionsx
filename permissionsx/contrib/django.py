@@ -71,7 +71,6 @@ class DjangoViewMixin(object):
         return super(DjangoViewMixin, self).dispatch(request, *args, **kwargs)
 
 
-
 class DummyRequest(object):
 
     user = None

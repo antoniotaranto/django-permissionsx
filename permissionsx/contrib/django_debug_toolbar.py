@@ -46,10 +46,10 @@ class PermissionsDebugPanel(DebugPanel):
             return
 
         view_info = {
-             'view_name': _('<no view>'),
-             'view_permissions': _('Not defined'),
-             'view_rules': _('Not defined'),
-         }
+            'view_name': _('<no view>'),
+            'view_permissions': _('Not defined'),
+            'view_rules': _('Not defined'),
+        }
         try:
             view_info['view_name'] = get_name_from_obj(view)
             try:
