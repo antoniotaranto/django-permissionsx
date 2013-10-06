@@ -45,7 +45,7 @@ class Permissions(object):
                 else:
                     result = self.permissions_evaluate(request, child[0], child[1])
                     if settings.PERMISSIONSX_DEBUG:
-                        logger.debug('Permissions: {}={} is {}'.format(child[0], child[1], result))
+                        logger.debug('Permissions check: {}={} is {}'.format(child[0], child[1], result))
                     if subtree.negated:
                         children_results.append(not result)
                     else:

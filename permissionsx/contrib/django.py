@@ -7,6 +7,8 @@ PermissionsX - Authorization for Django.
 """
 from __future__ import absolute_import
 
+import logging
+
 from django import template
 from django.contrib import auth
 from django.views.generic import RedirectView as DjangoRedirectView
@@ -18,6 +20,9 @@ from classytags.helpers import Tag
 
 from permissionsx import settings
 from permissionsx.utils import get_class
+
+
+logger = logging.getLogger('permissionsx')
 
 
 class RedirectView(DjangoRedirectView):
@@ -55,6 +60,9 @@ class DjangoViewMixin(object):
     def dispatch(self, request, *args, **kwargs):
         if hasattr(self, 'permissions_class'):
             permissions = self.permissions_class()
+            if settings.PERMISSIONSX_DEBUG:
+                logger.debug('View class: {}'.format(self.__class__.__name__))
+                logger.debug('View permissions class: {}'.format(permissions.__class__.__name__))
             if permissions.check_permissions(request, **kwargs):
                 return super(DjangoViewMixin, self).dispatch(request, *args, **kwargs)
             elif settings.PERMISSIONSX_LOGOUT_IF_DENIED:
