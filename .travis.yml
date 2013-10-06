@@ -1,18 +1,23 @@
 language: python
 python:
-  - "2.7"
-  - "3.3"
+  - 2.6
+  - 2.7
+  - 3.2
+  - 3.3
 install:
-  - pip install -q Django --use-mirrors
-  - pip install -q django-tastypie --use-mirrors
-  - pip install pep8 --use-mirrors
-  - pip install https://github.com/dcramer/pyflakes/tarball/master
+  - pip install https://github.com/django/django/archive/${DJANGO}.zip#egg=django
   - python setup.py -q install
 branches:
   only:
     - master
-before_script:
-  - "pep8 --exclude=migrations --ignore=E501,E225 permissionsx"
-  - pyflakes -x W src
 script:
   - python setup.py test
+env:
+  - DJANGO=1.4.8
+  - DJANGO=1.5.4
+matrix:
+  exclude:
+    - python: 3.2
+      env: DJANGO=1.4.8
+    - python: 3.3
+      env: DJANGO=1.4.8
