@@ -1,0 +1,18 @@
+language: python
+python:
+  - "2.7"
+  - "3.3"
+install:
+  - pip install -q Django --use-mirrors
+  - pip install -q django-tastypie --use-mirrors
+  - pip install pep8 --use-mirrors
+  - pip install https://github.com/dcramer/pyflakes/tarball/master
+  - python setup.py -q install
+branches:
+  only:
+    - master
+before_script:
+  - "pep8 --exclude=migrations --ignore=E501,E225 permissionsx"
+  - pyflakes -x W src
+script:
+  - python setup.py test

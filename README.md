@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/thinkingpotato/django-permissionsx.png?branch=master)](https://travis-ci.org/thinkingpotato/django-permissionsx)
+
 # django-permissionsx
 
 Authorization for Django: extended, experimental, X...
