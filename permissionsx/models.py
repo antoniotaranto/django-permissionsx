@@ -5,8 +5,15 @@ PermissionsX - Authorization for Django.
 :license:   BSD, see LICENSE for more details.
 
 """
+import logging
+
 from django.db.models.query_utils import Q
 from django.core.exceptions import ImproperlyConfigured
+
+from permissionsx import settings
+
+
+logger = logging.getLogger('permissionsx')
 
 
 class Permissions(object):
@@ -37,6 +44,8 @@ class Permissions(object):
                     children_results.append(self.tree_traversal(request, child))
                 else:
                     result = self.permissions_evaluate(request, child[0], child[1])
+                    if settings.PERMISSIONSX_DEBUG:
+                        logger.debug('Permissions: {}={} is {}'.format(child[0], child[1], result))
                     if subtree.negated:
                         children_results.append(not result)
                     else:
