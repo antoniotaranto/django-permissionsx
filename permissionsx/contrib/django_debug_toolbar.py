@@ -54,7 +54,7 @@ class PermissionsDebugPanel(DebugPanel):
         try:
             view_info['view_name'] = get_name_from_obj(view)
             try:
-                view_info['view_permissions'] = get_name_from_obj(view.permissions)
+                view_info['view_permissions'] = get_name_from_obj(view.permissions_class)
                 view_info['view_rules'] = view.permissions_class().get_permissions(request)
             except AttributeError:
                 # NOTE: No permissions defined for this view.
