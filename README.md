@@ -246,7 +246,7 @@ If user has not been granted permission to access a Django view, log the user ou
 
 ## CHANGELOG
 
-### 1.0.0
+### 1.0.0 (currently in development)
 
 * Added support for custom response classes (e.g. for changing redirect URL, adding custom user message).
 
