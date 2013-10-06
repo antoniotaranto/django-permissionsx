@@ -70,6 +70,10 @@ class DummyRequest(object):
 
     user = None
 
+    def __init__(self, user=None):
+        if user is not None:
+            self.user = user
+
 
 register = template.Library()
 

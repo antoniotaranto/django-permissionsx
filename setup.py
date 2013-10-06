@@ -37,4 +37,5 @@ setup(
     install_requires=[
         'django-classy-tags >= 0.4',
     ],
+    test_suite='runtests',
 )
