@@ -64,7 +64,14 @@ class DjangoViewMixin(object):
         return super(DjangoViewMixin, self).dispatch(request, *args, **kwargs)
 
 
+
+class DummyRequest(object):
+
+    user = None
+
+
 register = template.Library()
+
 
 class Permissions(Tag):
 
@@ -80,7 +87,12 @@ class Permissions(Tag):
             kwargs = {}
         module, _, name = permissions_path.rpartition('.')
         permissions_class = get_class(module, name)
-        granted = permissions_class().check_permissions(context['request'], **kwargs)
+        # NOTE: Dummy request keeps temporary template objects without affecting the real
+        #       request. Otherwise iterating over them would change the object that was
+        #       assigned at the view level.
+        dummy_request = DummyRequest()
+        dummy_request.user = context['user']
+        granted = permissions_class().check_permissions(dummy_request, **kwargs)
         if varname:
             context[varname] = granted
             return ''
