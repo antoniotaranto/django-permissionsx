@@ -72,6 +72,12 @@ Defaults to `False`.
 
 If user has not been granted permission to access a Django view, log the user out before redirecting to `PERMISSIONSX_REDIRECT_URL`.
 
+**PERMISSIONSX_DEBUG**
+
+Defaults to `False`.
+
+If turned on, logger named `permissionsx` will be available for debugging purposes.
+
 ## Things good to know
 
 * If a user is being redirected while not being logged in (`request.user.is_authenticated()`), current `request.path` will be added to the URL as `next` parameter.
@@ -79,8 +85,9 @@ If user has not been granted permission to access a Django view, log the user ou
 
 ## More examples
 
+### Complex example
 
-### profiles/models.py
+#### profiles/models.py
 
         class Profile(models.Model):
 
@@ -96,7 +103,7 @@ If user has not been granted permission to access a Django view, log the user ou
             is_editor = False
             is_administrator = False
 
-### profiles/permissions.py
+#### profiles/permissions.py
 
         from permissionsx.models import P
         from permissionsx.models import Permissions
@@ -134,7 +141,7 @@ If user has not been granted permission to access a Django view, log the user ou
                 # NOTE: Please note that the rules below make no sense.
                 return ~P(profile__is_editor=True) & P(P(user__pk=request.user.pk) | P(user__username='Mary'))
 
-### articles/views.py
+#### articles/views.py
 
         from permissionsx.contrib.django import DjangoViewMixin
 
@@ -156,7 +163,7 @@ If user has not been granted permission to access a Django view, log the user ou
             success_url = reverse_lazy('article_list')
             permissions_class = StaffPermissions
 
-### articles/templates/articles/comment_list.html
+#### articles/templates/articles/comment_list.html
 
         {% load permissionsx_tags %}
 
@@ -176,7 +183,9 @@ If user has not been granted permission to access a Django view, log the user ou
                 <a href="{% url 'article_view' object.slug %}" class="btn btn-whatever">View</a>
         {% endfor $}
 
-### articles/api.py (Tastypie)
+### Using permission classes in Tastypie
+
+#### articles/api.py
 
         from permissionsx.contrib.tastypie import TastypieAuthorization
 
@@ -211,7 +220,9 @@ If user has not been granted permission to access a Django view, log the user ou
             def delete_detail(self, object_list, bundle):
                 raise Unauthorized()
 
-### Response with custom message and redirect URL (articles/views.py)
+### Response with custom message and redirect URL
+
+#### articles/views.py
 
         class NotStaffRedirectView(MessageRedirectView):
 
@@ -228,7 +239,9 @@ If user has not been granted permission to access a Django view, log the user ou
             permissions_response_class = NotStaffRedirectView
 
 
-### Reusing and passing variables to permissions (articles/permissions.py)
+### Reusing and passing variables to permissions
+
+#### articles/permissions.py
 
         editor_or_administrator = P(profile__is_editor=True) | P(profile__is_administrator=True)
 
@@ -243,6 +256,30 @@ If user has not been granted permission to access a Django view, log the user ou
                 super(AuthorIfNotPublishedPermissions, self).set_request_objects(request, **kwargs)
                 request.article = Article.objects.get(slug=kwargs.get('slug'))
 
+
+### Best practices: get permissions in the top level template
+
+#### templates/base.html
+
+        {% load permissionsx_tags %}
+        {% permissions 'newspaper.profiles.permissions.AuthorPermissions' as user_is_author %}
+        {% permissions 'newspaper.profiles.permissions.StaffPermissions' as user_is_staff %}
+        {% permissions 'newspaper.profiles.permissions.AdministratorPermissions' as user_is_administrator %}
+
+        <ul id="utility-navigation>
+            {% if user_is_administrator %}
+                <a href="#">Add a new author</a>
+            {% endif %}
+            {% if user_is_staff %}
+                <a href="#">Publish article</a>
+            {% endif %}
+        </ul>
+
+#### templates/articles/article_detail.html
+
+        {% if user_is_author %}
+            <a href="#">Write article</a>
+        {% endif %}
 
 ## CHANGELOG
 
