@@ -220,7 +220,28 @@ If user has not been granted permission to access a Django view, log the user ou
             def delete_detail(self, object_list, bundle):
                 raise Unauthorized()
 
+### Response with custom message and redirect URL (articles/views.py)
+
+        class NotStaffRedirectView(MessageRedirectView):
+
+            message = (messages.warning, _('Insufficient permissions!'))
+            redirect_url = reverse_lazy('help_screen')
+
+
+        class ArticleCreateView(DjangoViewMixin, CreateView):
+
+            model = Article
+            success_url = reverse_lazy('article_list')
+            form_class = ArticleCreateForm
+            permissions_class = StaffPermissions
+            permissions_response_class = NotStaffRedirectView
+
+
 ## CHANGELOG
+
+### 1.0.0
+
+* Added support for custom response classes (e.g. for changing redirect URL, adding custom user message).
 
 ### 0.0.9
 
