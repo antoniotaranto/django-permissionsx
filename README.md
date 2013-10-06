@@ -80,7 +80,7 @@ If turned on, logger named `permissionsx` will be available for debugging purpos
 
 ## Things good to know
 
-* If a user is being redirected while not being logged in (`request.user.is_authenticated()`), current `request.path` will be added to the URL as `next` parameter.
+* If a user is being redirected while not being logged in (`request.user.is_authenticated()`), current `request.get_full_path()` will be added to the URL as `next` parameter.
 
 
 ## More examples
@@ -183,7 +183,7 @@ If turned on, logger named `permissionsx` will be available for debugging purpos
                 <a href="{% url 'article_view' object.slug %}" class="btn btn-whatever">View</a>
         {% endfor $}
 
-### Using permission classes in Tastypie
+### Using permission classes with Tastypie
 
 #### articles/api.py
 
@@ -224,6 +224,11 @@ If turned on, logger named `permissionsx` will be available for debugging purpos
 
 #### articles/views.py
 
+        from django.contrib import messages
+
+        from permissionsx.contrib.django import MessageRedirectView
+
+
         class NotStaffRedirectView(MessageRedirectView):
 
             message = (messages.warning, _('Insufficient permissions!'))
@@ -239,7 +244,7 @@ If turned on, logger named `permissionsx` will be available for debugging purpos
             permissions_response_class = NotStaffRedirectView
 
 
-### Reusing and passing variables to permissions
+### Reusing permissions and passing request variables
 
 #### articles/permissions.py
 
@@ -277,15 +282,19 @@ If turned on, logger named `permissionsx` will be available for debugging purpos
 
 #### templates/articles/article_detail.html
 
+        {% extends "base.html" %}
+
         {% if user_is_author %}
             <a href="#">Write article</a>
         {% endif %}
 
 ## CHANGELOG
 
-### 1.0.0 (currently in development)
+### 1.0.0
 
 * Added support for custom response classes (e.g. for changing redirect URL, adding custom user message).
+* Added tests for checking permissions.
+* Minor fixes and improvements.
 
 ### 0.0.9
 

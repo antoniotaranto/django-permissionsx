@@ -5,7 +5,6 @@ PermissionsX - Authorization for Django.
 :license:   BSD, see LICENSE for more details.
 
 """
-import sys
 
 from setuptools import setup
 from setuptools import find_packages
@@ -24,7 +23,7 @@ setup(
     packages=find_packages(),
     package_data={str('permissionsx'): [str('templates/permissionsx/panels/*')]},
     classifiers=[
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 5 - Production/Stable',
         'Environment :: Web Environment',
         'Framework :: Django',
         'Intended Audience :: Developers',

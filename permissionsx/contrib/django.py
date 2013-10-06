@@ -9,9 +9,7 @@ from __future__ import absolute_import
 
 from django import template
 from django.contrib import auth
-from django.contrib import messages
 from django.views.generic import RedirectView as DjangoRedirectView
-from django.views.generic import View
 
 from classytags.core import Options
 from classytags.arguments import Argument

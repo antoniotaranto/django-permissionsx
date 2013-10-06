@@ -7,7 +7,6 @@ PermissionsX - Authorization for Django.
 """
 from __future__ import absolute_import
 
-from django.core.urlresolvers import resolve
 from django.http import Http404
 from django.utils.translation import ugettext_lazy as _
 
