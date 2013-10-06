@@ -288,6 +288,26 @@ If turned on, logger named `permissionsx` will be available for debugging purpos
             <a href="#">Write article</a>
         {% endif %}
 
+## Compatibility
+
+### Python 2.7.x
+
+|                 |  django-permissionsx 1.0.0  |
+| :-------------: | :-------------------------: |
+| Django 1.4.8    |           &#10004;          |
+| Django 1.5.4    |           &#10004;          |
+| Tastypie 0.9.16 |           &#10004;          |
+| Tastypie 0.10.0 |           &#10004;          |
+
+### Python 3.3.x
+
+**NOTE**: `django-debug-toolbar` is not currently available for Python 3.3.x.
+
+|                 |  django-permissionsx 1.0.0  |
+| :-------------: | :-------------------------: |
+| Django 1.5.4    |           &#10004;          |
+| Tastypie 0.10.0 |           &#10004;          |
+
 ## CHANGELOG
 
 ### 1.0.0
