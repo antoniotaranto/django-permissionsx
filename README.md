@@ -117,10 +117,8 @@ If turned on, logger named `permissionsx` will be available for debugging purpos
         class ProfilePermissions(Permissions):
 
             def set_request_objects(self, request, **kwargs):
-                if request.user.is_authenticated():
-                    request.profile = request.user.get_profile()
-                else:
-                    request.profile = AnonymousProfile()
+                if request.user.is_anonymous():
+                    request.user.get_profile = lambda: AnonymousProfile()
 
 
         class UserPermissions(Permissions):
@@ -130,18 +128,18 @@ If turned on, logger named `permissionsx` will be available for debugging purpos
 
         class AuthorPermissions(ProfilePermissions):
 
-            permissions = P(profile__is_author=True) | P(profile__is_editor=True) | P(profile__is_administrator=True)
+            permissions = P(user__get_profile__is_author=True) | P(user__get_profile__is_editor=True) | P(user__get_profile__is_administrator=True)
 
 
         class StaffPermissions(ProfilePermissions):
 
-            permissions = P(profile__is_editor=True) | P(profile__is_administrator=True)
+            permissions = P(user__get_profile__is_editor=True) | P(user__get_profile__is_administrator=True)
 
-        class VariaPermissions(Permissions):
+        class VariaPermissions(ProfilePermissions):
 
             def get_permissions(self, request=None):
                 # NOTE: Please note that the rules below make no sense.
-                return ~P(profile__is_editor=True) & P(P(user__pk=request.user.pk) | P(user__username='Mary'))
+                return ~P(user__get_profile__is_editor=True) & P(P(user__pk=request.user.pk) | P(user__username='Mary'))
 
 #### articles/views.py
 
@@ -250,14 +248,14 @@ If turned on, logger named `permissionsx` will be available for debugging purpos
 
 #### articles/permissions.py
 
-        editor_or_administrator = P(profile__is_editor=True) | P(profile__is_administrator=True)
+        editor_or_administrator = P(user__get_profile__is_editor=True) | P(user__get_profile__is_administrator=True)
 
         class AuthorIfNotPublishedPermissions(ProfilePermissions):
 
             permissions = editor_or_administrator
 
             def get_permissions(self, request=None):
-                return self.permissions | P(P(profile__is_author=True) & P(article__is_published=False) & P(article__author=request.user))
+                return self.permissions | P(P(user__get_profile__is_author=True) & P(article__is_published=False) & P(article__author=request.user))
 
             def set_request_objects(self, request, **kwargs):
                 super(AuthorIfNotPublishedPermissions, self).set_request_objects(request, **kwargs)
@@ -311,6 +309,10 @@ If turned on, logger named `permissionsx` will be available for debugging purpos
 | Tastypie 0.10.0 |           &#10004;          |
 
 ## CHANGELOG
+
+### 1.1.0
+
+* New syntax possible for retrieving related objects, e.g. `P(user__get_profile__related_object__is_something)`.
 
 ### 1.0.0
 

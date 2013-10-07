@@ -43,20 +43,18 @@ class AndStaffSuperuserPermissions(Permissions):
 class ProfilePermissions(Permissions):
 
     def set_request_objects(self, request, **kwargs):
-        if request.user.is_authenticated():
-            request.profile = request.user.get_profile()
-        else:
-            request.profile = AnonymousProfile()
+        if request.user.is_anonymous():
+            request.user.get_profile = lambda: AnonymousProfile()
 
 
 class NegatePermissions(ProfilePermissions):
 
-    permissions = ~P(profile__is_public=False) & ~P(user__is_authenticated=False)
+    permissions = ~P(user__get_profile__is_public=False) & ~P(user__is_authenticated=False)
 
 
 class IsPublicPermissions(ProfilePermissions):
 
-    permissions = P(profile__is_public=True)
+    permissions = P(user__get_profile__is_public=True)
 
 
 class NestedPermissions(Permissions):

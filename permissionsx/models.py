@@ -21,20 +21,24 @@ class Permissions(object):
     permissions = None
 
     def permissions_evaluate(self, request, expression, argument=None):
-        obj, method = expression.split('__')
+        words = expression.split('__')
+        word = words.pop(0)
         try:
-            request_obj = getattr(request, obj)
+            cmp_obj = getattr(request, word)
         except AttributeError:
             # NOTE: WSGIRequest has no `obj` attribute. Raise exception by
             #       default, this means something is wrong with permissions.
-            raise ImproperlyConfigured('There is no request object matching "{}". Related to rule: "{}".'.format(obj, expression))
-        attr = getattr(request_obj, method)
-        try:
-            result = attr()
-        except TypeError:
-            # NOTE: Object not callable.
-            result = attr
-        return result == argument
+            raise ImproperlyConfigured('There is no request object matching "{}". Related to rule: "{}".'.format(word, expression))
+        for word in words:
+            attr = getattr(cmp_obj, word)
+            try:
+                partial = attr()
+            except TypeError:
+                # NOTE: Object not callable.
+                partial = attr
+            cmp_obj = partial
+        result = cmp_obj == argument
+        return result
 
     def tree_traversal(self, request, subtree):
         if hasattr(subtree, 'children'):
