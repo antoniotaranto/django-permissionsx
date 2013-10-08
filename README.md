@@ -312,7 +312,7 @@ If turned on, logger named `permissionsx` will be available for debugging purpos
 
 ### 1.1.0
 
-* New syntax possible for retrieving related objects, e.g. `P(user__get_profile__related_object__is_something)`.
+* New syntax possible for retrieving related objects, e.g. `P(user__get_profile__related_object__is_something=True)`.
 
 ### 1.0.0
 
