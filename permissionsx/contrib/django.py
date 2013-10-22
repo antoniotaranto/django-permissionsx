@@ -13,11 +13,6 @@ from django import template
 from django.contrib import auth
 from django.views.generic import RedirectView as DjangoRedirectView
 
-from classytags.core import Options
-from classytags.arguments import Argument
-from classytags.arguments import MultiKeywordArgument
-from classytags.helpers import Tag
-
 from permissionsx import settings
 from permissionsx.utils import get_class
 
@@ -59,14 +54,21 @@ class DjangoViewMixin(object):
 
     def dispatch(self, request, *args, **kwargs):
         if hasattr(self, 'permissions_class'):
-            permissions = self.permissions_class()
+            permissions = self.permissions_class() if callable(self.permissions_class) else self.permissions_class
             if settings.PERMISSIONSX_DEBUG:
                 logger.debug('View class: {}'.format(self.__class__.__name__))
                 logger.debug('View permissions class: {}'.format(permissions.__class__.__name__))
-            if permissions.check_permissions(request, **kwargs):
+            check_result = permissions.check_permissions(request, **kwargs)
+            # NOTE: Check if any of the permissions checked want to override default response.
+            if request.permissionsx_return_overrides[check_result] is not None:
+                # NOTE: Perform return override and pass everything available, e.g. for customizing View responses.
+                return request.permissionsx_return_overrides[check_result](request, *args, **kwargs)
+            # NOTE: Access granted, return the requested view.
+            if check_result:
                 return super(DjangoViewMixin, self).dispatch(request, *args, **kwargs)
             elif settings.PERMISSIONSX_LOGOUT_IF_DENIED:
                 auth.logout(request)
+            # NOTE: Return default response for 401 - access couldn't be granted.
             return self.permissions_response_class.as_view()(request, *args, **kwargs)
         return super(DjangoViewMixin, self).dispatch(request, *args, **kwargs)
 
@@ -83,30 +85,14 @@ class DummyRequest(object):
 register = template.Library()
 
 
-class Permissions(Tag):
-
-    options = Options(
-        Argument('permissions_path'),
-        MultiKeywordArgument('kwargs', required=False),
-        'as',
-        Argument('varname', required=False, resolve=False)
-    )
-
-    def render_tag(self, context, permissions_path, varname, kwargs=None):
-        if kwargs is None:
-            kwargs = {}
-        module, _, name = permissions_path.rpartition('.')
-        permissions_class = get_class(module, name)
-        # NOTE: Dummy request keeps temporary template objects without affecting the real
-        #       request. Otherwise iterating over them would change the object that was
-        #       assigned at the view level.
-        dummy_request = DummyRequest()
-        dummy_request.user = context['user']
-        granted = permissions_class().check_permissions(dummy_request, **kwargs)
-        if varname:
-            context[varname] = granted
-            return ''
-        else:
-            return granted
-
-register.tag(Permissions)
+@register.assignment_tag(takes_context=True)
+def permissions(context, permissions_path, **kwargs):
+    module, _, name = permissions_path.rpartition('.')
+    permissions_class = get_class(module, name)
+    # NOTE: Dummy request keeps temporary template objects without affecting the real
+    #       request. Otherwise iterating over them would change the object that was
+    #       assigned at the view level.
+    dummy_request = DummyRequest()
+    dummy_request.user = context['user']
+    granted = permissions_class().check_permissions(dummy_request, **kwargs)
+    return granted

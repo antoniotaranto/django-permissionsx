@@ -36,8 +36,5 @@ setup(
         'Topic :: Software Development',
         'Topic :: Software Development :: Libraries',
     ],
-    install_requires=[
-        'django-classy-tags >= 0.4',
-    ],
     test_suite='runtests',
 )

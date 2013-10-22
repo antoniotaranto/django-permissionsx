@@ -18,6 +18,11 @@ from django.test import (
 from django.contrib.sessions.backends.db import SessionStore
 from django.contrib.sessions.middleware import SessionMiddleware
 
+from permissionsx.models import (
+    Arg,
+    P,
+    Permissions,
+)
 from permissionsx.tests.permissions import *
 from permissionsx.tests.models import Profile
 
@@ -49,8 +54,11 @@ class PermissionsDefinitionsTests(TestCase):
         logout(request)
         return request
 
-    def permissions_for_request(self, permissions_class, request):
-        return permissions_class().check_permissions(request)
+    def permissions_for_request(self, permissions, request):
+        if isinstance(permissions, Permissions):
+            return permissions.check_permissions(request)
+        else:
+            return permissions().check_permissions(request)
 
     def test_is_authenticated(self):
         request = self.get_request_for_user(self.user)
@@ -137,3 +145,48 @@ class PermissionsDefinitionsTests(TestCase):
         self.assertFalse(self.permissions_for_request(RequestParamPermissions, request_admin))
         login(request_admin, self.admin)
         self.assertTrue(self.permissions_for_request(RequestParamPermissions, request_admin))
+
+    def test_overrides(self):
+        request_admin = self.get_request_for_user(self.admin)
+        login(request_admin, self.admin)
+        self.permissions_for_request(OverrideIfFalsePermissions, request_admin)
+        self.assertEqual('Override returns False', request_admin.permissionsx_return_overrides[False]())
+        self.permissions_for_request(OverrideIfTruePermissions, request_admin)
+        self.assertEqual('Override returns True', request_admin.permissionsx_return_overrides[True]())
+        self.permissions_for_request(OverrideIfTrueFalsePermissions, request_admin)
+        self.assertEqual('Override returns False', request_admin.permissionsx_return_overrides[False]())
+        self.assertEqual('Override returns True', request_admin.permissionsx_return_overrides[True]())
+        self.permissions_for_request(NegatedOverrideIfTrueFalsePermissions, request_admin)
+        self.assertEqual('Override returns True', request_admin.permissionsx_return_overrides[True]())
+        self.assertEqual('Override returns False', request_admin.permissionsx_return_overrides[False]())
+        self.permissions_for_request(NestedNegatedOverridePermissions, request_admin)
+        self.assertEqual('Override returns True', request_admin.permissionsx_return_overrides[True]())
+        self.assertEqual('Override returns False', request_admin.permissionsx_return_overrides[False]())
+
+    def test_oneliners(self):
+        request = self.get_request_for_user(self.user)
+        self.assertFalse(self.permissions_for_request(Permissions(P(user__is_authenticated=True) & P(user__username=request.user.username)), request))
+        login(request, self.user)
+        self.assertTrue(self.permissions_for_request(Permissions(P(user__is_authenticated=True) | P(user__username='someotheruser')), request))
+        self.assertTrue(self.permissions_for_request(Permissions(P(user__is_authenticated=True) | P(user__username='someotheruser')), request))
+        self.permissions_for_request(Permissions(user_is_authenticated & P(user__is_superuser=True, if_false=if_true_override)), request)
+        self.assertEqual('Override returns True', request.permissionsx_return_overrides[False]())
+        self.permissions_for_request(Permissions(user_is_superuser | user_is_staff, if_false=if_true_override), request)
+        self.assertEqual('Override returns True', request.permissionsx_return_overrides[False]())
+        permissions_tested = Permissions(
+            P(user__is_authenticated=True) &
+            P(user__is_staff=True, if_false=if_false_override) &
+            P(user__is_staff=False, if_true=if_true_override) &
+            P(user__is_superuser=False)
+        )
+        self.permissions_for_request(permissions_tested, request)
+        self.assertEqual('Override returns True', request.permissionsx_return_overrides[True]())
+        self.assertEqual('Override returns False', request.permissionsx_return_overrides[False]())
+
+    def test_request_arguments(self):
+        request = self.get_request_for_user(self.user)
+        setattr(request, 'user2', self.admin)
+        login(request, self.user)
+        self.assertTrue(self.permissions_for_request(Permissions(P(user__get_profile__is_attached_to_user=Arg('user'))), request))
+        self.assertFalse(self.permissions_for_request(Permissions(P(user__get_profile__is_attached_to_user=Arg('user2'))), request))
+

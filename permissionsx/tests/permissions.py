@@ -15,6 +15,11 @@ user_is_staff = P(user__is_staff=True)
 user_is_superuser= P(user__is_superuser=True)
 
 
+def if_override(x): return(x)
+if_true_override = lambda: if_override('Override returns True')
+if_false_override = lambda: if_override('Override returns False')
+
+
 class AuthenticatedPermissions(Permissions):
 
     permissions = P(user__is_authenticated=True)
@@ -66,3 +71,28 @@ class RequestParamPermissions(Permissions):
 
     def get_permissions(self, request=None):
         return ~P(user__is_authenticated=False) & P(user__username=request.user.username)
+
+
+class OverrideIfFalsePermissions(Permissions):
+
+    permissions = P(user__is_authenticated=True, if_false=if_false_override)
+
+
+class OverrideIfTruePermissions(Permissions):
+
+    permissions = P(user__is_authenticated=True, if_true=if_true_override)
+
+
+class OverrideIfTrueFalsePermissions(Permissions):
+
+    permissions = P(user__is_authenticated=True, if_true=if_true_override, if_false=if_false_override)
+
+
+class NegatedOverrideIfTrueFalsePermissions(Permissions):
+
+    permissions = ~P(user__is_authenticated=True, if_true=if_true_override, if_false=if_false_override)
+
+
+class NestedNegatedOverridePermissions(Permissions):
+
+    permissions = P(P(user__is_authenticated=False) & ~P(user__is_authenticated=True, if_true=if_true_override, if_false=if_false_override))
