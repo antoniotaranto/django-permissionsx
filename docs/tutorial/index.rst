@@ -50,7 +50,6 @@ Note that :class:`Arg` parameter is passed as a string. Basically, it is equival
 
     request.user.get_profile().has_access_to(request.invoice)
 
-See `DetailView and object permissions`_ for an example of how this can simplify application logic.
 
 Permissions
 -----------
@@ -438,71 +437,6 @@ Setting request objects
 
             def set_request_objects(self, request, **kwargs):
                 request.article = Article.objects.get(slug=kwargs.get('slug'))
-
-
-DetailView and object permissions
----------------------------------
-
-:file:`profiles/models.py`
-
-.. code-block:: python
-
-        class Profile(models.Model):
-
-            [...]
-
-            def has_purchased(self, object):
-                return object.purchases.filter(customer=self.user).exists()
-
-
-:file:`articles/permissions.py`
-
-.. code-block:: python
-
-        has_purchased = P(user__get_profile__has_purchased=Arg('object'))
-
-
-        class ArticlePermissions(ProfilePermissions):
-
-            def set_request_objects(self, request, **kwargs):
-                super(ArticlePermissions, self).set_request_objects(request, **kwargs)
-                request.object = Article.objects.get(slug=kwargs.get('slug'))
-
-
-        class CategoryPermissions(ProfilePermissions):
-
-            def set_request_objects(self, request, **kwargs):
-                super(CategoryPermissions, self).set_request_objects(request, **kwargs)
-                request.object = Category.objects.get(slug=kwargs.get('slug'))
-
-
-        class SongPermissions(ProfilePermissions):
-
-            def set_request_objects(self, request, **kwargs):
-                super(CategoryPermissions, self).set_request_objects(request, **kwargs)
-                request.object = Song.objects.get(slug=kwargs.get('slug'))
-
-
-:file:`articles/views.py`
-
-.. code-block:: python
-
-        class ArticleDetailView(DjangoViewMixin, DetailView):
-
-            model = Article
-            permissions_class = ArticlePermissions(has_purchased)
-
-
-        class CategoryDetailView(DjangoViewMixin, DetailView):
-
-            model = Category
-            permissions_class = CategoryPermissions(has_purchased)
-
-
-        class CategoryDetailView(DjangoViewMixin, DetailView):
-
-            model = Song
-            permissions_class = SongPermissions(has_purchased)
 
 
 Using permissions in templates
