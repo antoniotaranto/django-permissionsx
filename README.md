@@ -4,7 +4,7 @@
 
 * Documentation: <http://django-permissionsx.readthedocs.org/>
 * Python Package: <http://pypi.python.org/pypi/django-permissionsx/>
-
+* Changelog: <http://django-permissionsx.readthedocs.org/en/latest/changelog.html>
 
 
 
