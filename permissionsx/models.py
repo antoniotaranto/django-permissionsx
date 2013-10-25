@@ -162,9 +162,8 @@ class P(object):
     def __contains__(self, other):
         return other in self.children
 
-    def _new_instance(self, negate=False):
-        negated = not self.negated if negate else self.negated
-        return P(self.children, self.connector, negated, self.if_false, self.if_true)
+    def _new_instance(self):
+        return P(self.children, self.connector, self.negated, self.if_false, self.if_true)
 
     def add(self, node, conn_type):
         if node in self.children and conn_type == self.connector:
@@ -186,7 +185,9 @@ class P(object):
             self.children = [obj, node]
 
     def negate(self):
-        self.children = [self._new_instance(negate=True)]
+        new_instance = self._new_instance()
+        new_instance.negated = not new_instance.negated
+        self.children = [new_instance]
         self.connector = self.default
 
     def start_subtree(self, conn_type):
