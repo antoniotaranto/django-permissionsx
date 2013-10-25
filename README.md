@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.org/thinkingpotato/django-permissionsx.png?branch=master)](https://travis-ci.org/thinkingpotato/django-permissionsx)
+[![Coverage Status](https://coveralls.io/repos/thinkingpotato/django-permissionsx/badge.png)](https://coveralls.io/r/thinkingpotato/django-permissionsx)
 
 # django-permissionsx
 

@@ -34,10 +34,14 @@ configure_settings = {
     'MIDDLEWARE_CLASSES': (
         'django.contrib.sessions.middleware.SessionMiddleware',
         'django.contrib.auth.middleware.AuthenticationMiddleware',
+        'django.contrib.messages.middleware.MessageMiddleware',
     ),
     'TEMPLATE_DIRS': (
         os.path.join(os.path.abspath(os.path.dirname(__file__)), 'templates'),
+        os.path.join(os.path.abspath(os.path.dirname(__file__)), 'tests/templates'),
     ),
+    'ROOT_URLCONF': 'permissionsx.tests.test_urls',
+    'PERMISSIONSX_CACHING': False,
 }
 
 settings.configure(**configure_settings)

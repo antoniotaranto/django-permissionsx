@@ -1,0 +1,8 @@
+{% load permissionsx_tags %}
+
+{% permissions 'permissionsx.tests.permissions.StaffPermissions' as is_staff %}
+
+    User Menu
+{% if is_staff %}
+    Staff Menu
+{% endif %}

@@ -24,3 +24,8 @@ class AnonymousProfile(object):
 
     def is_attached_to_user(self, user):
         return False
+
+
+class TestObject(models.Model):
+
+    title = models.CharField(max_length=50)

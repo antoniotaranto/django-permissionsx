@@ -2,6 +2,13 @@
 Changelog
 =========
 
+1.1.3
+=====
+
+* Added in-memory caching (``settings.PERMISSIONSX_CACHING``).
+* Added tests for Django Views, settings and overrides.
+* Changed the way overrides work. Few things got simplified by the way. Now it is possible to use multiple overrides attached to :class:`P` objects, not the top-level :class:`Permissions`.
+
 1.1.2
 =====
 

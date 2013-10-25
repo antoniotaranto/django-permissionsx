@@ -12,6 +12,7 @@ import logging
 from django import template
 from django.contrib import auth
 from django.views.generic import RedirectView as DjangoRedirectView
+from django.core.exceptions import ImproperlyConfigured
 
 from permissionsx import settings
 from permissionsx.utils import get_class
@@ -58,11 +59,13 @@ class DjangoViewMixin(object):
             if settings.PERMISSIONSX_DEBUG:
                 logger.debug('View class: {}'.format(self.__class__.__name__))
                 logger.debug('View permissions class: {}'.format(permissions.__class__.__name__))
+            if permissions is None:
+                raise ImproperlyConfigured('"permissions_class" is not defined for {}'.format(self.__class__.__name__))
             check_result = permissions.check_permissions(request, **kwargs)
             # NOTE: Check if any of the permissions checked want to override default response.
-            if request.permissionsx_return_overrides[check_result] is not None:
+            if request.permissionsx_return_overrides:
                 # NOTE: Perform return override and pass everything available, e.g. for customizing View responses.
-                return request.permissionsx_return_overrides[check_result](request, *args, **kwargs)
+                return request.permissionsx_return_overrides[0](request, *args, **kwargs)
             # NOTE: Access granted, return the requested view.
             if check_result:
                 return super(DjangoViewMixin, self).dispatch(request, *args, **kwargs)

@@ -9,9 +9,10 @@ import copy
 import logging
 
 from django.core.exceptions import ImproperlyConfigured
-from django.utils import six
+from django.contrib.auth.signals import user_logged_in
 
 from permissionsx import settings
+from permissionsx.cache import *
 
 
 logger = logging.getLogger('permissionsx')
@@ -24,10 +25,6 @@ class Permissions(object):
     def __init__(self, *args, **kwargs):
         if self.permissions is None and args:
             self.permissions = args[0]
-        if 'if_false' in kwargs:
-            self.permissions.if_false = kwargs.get('if_false')
-        if 'if_true' in kwargs:
-            self.permissions.if_true = kwargs.get('if_true')
 
     def permissions_evaluate(self, request, expression, argument=None):
         words = expression.split('__')
@@ -52,29 +49,30 @@ class Permissions(object):
             partial = attr
         return partial == argument
 
-    def tree_traversal(self, request, subtree, return_overrides):
+    def permissions_traversal(self, request, subtree):
         if hasattr(subtree, 'children'):
             children_results = []
             for child in subtree.children:
                 if hasattr(child, 'children'):
-                    children_results.append(self.tree_traversal(request, child, return_overrides))
+                    children_results.append(self.permissions_traversal(request, child))
                 else:
-                    result = self.permissions_evaluate(request, child[0], child[1])
-                    if settings.PERMISSIONSX_DEBUG:
-                        logger.debug('Permissions check: {}={} is {}'.format(child[0], child[1], result))
+                    child_copy = copy.copy(child)
+                    if_true = child_copy.pop('if_true', None)
+                    if_false = child_copy.pop('if_false', None)
+                    items = list(child_copy.items())[0]
+                    result = self.permissions_evaluate(request, items[0], items[1])
                     if subtree.negated:
                         children_results.append(not result)
                     else:
                         children_results.append(result)
-                    if subtree.if_true:
-                        return_overrides[True] = subtree.if_true
-                    if subtree.if_false:
-                        return_overrides[False] = subtree.if_false
-            if subtree.connector == 'OR':
-                boolean_result = True in children_results
+                    if result and if_true is not None:
+                        request.permissionsx_return_overrides += [if_true]
+                    if not result and if_false is not None:
+                        request.permissionsx_return_overrides += [if_false]
+            if subtree.connector == P.OR:
+                return True in children_results
             else:
-                boolean_result = not False in children_results
-            return boolean_result
+                return not False in children_results
 
     def get_permissions(self, request=None):
         return self.permissions
@@ -85,33 +83,46 @@ class Permissions(object):
     def check_permissions(self, request=None, **kwargs):
         self.set_request_objects(request, **kwargs)
         permissions = self.get_permissions(request)
+        if settings.PERMISSIONSX_CACHING:
+            perm_str = permissions.cached_str
+            if perm_str is None:
+                perm_str = str(permissions)
+                permissions.cached_str = perm_str
+            cache_key = permissions_cache.get_key(request, perm_str)
+        else:
+            cache_key = None
         if permissions:
-            return_overrides = {True: None, False: None}
-            # NOTE: Passing pointer to `return_overrides`.
-            boolean_result = self.tree_traversal(request, permissions, return_overrides)
-            setattr(request, 'permissionsx_return_overrides', return_overrides)
-            return boolean_result
+            result = None
+            setattr(request, 'permissionsx_return_overrides', [])
+            if settings.PERMISSIONSX_CACHING:
+                result, overrides = permissions_cache.get_cache(request, cache_key)
+                if overrides:
+                    request.permissionsx_return_overrides = overrides
+            if result is None:
+                result = self.permissions_traversal(request, permissions)
+                if settings.PERMISSIONSX_CACHING:
+                    permissions_cache.set_cache(request, cache_key, (result, request.permissionsx_return_overrides))
+            return result
         return True
 
 
 class P(object):
     """ Based on `django.db.models.query_utils.Q` mixed with `django.utils.tree.Node`. """
 
-    AND = 'AND'
-    OR = 'OR'
+    AND = '&'
+    OR = '|'
     default = AND
 
-    def __init__(self, children=None, connector=None, negated=False, if_false=None, if_true=None, *args, **kwargs):
-        if children is None:
-            children = list(args) + list(six.iteritems(kwargs))
+    def __init__(self, children=None, connector=None, negated=False, **kwargs):
+        if children is None and kwargs:
+            children = [kwargs]
         elif isinstance(children, P):
             children = [children]
-        self.children = children and children[:] or []
+        self.children = children and copy.copy(children) or []
         self.connector = connector or self.default
         self.subtree_parents = []
         self.negated = negated
-        self.if_false = if_false
-        self.if_true = if_true
+        self.cached_str = None
 
     def _combine(self, other, conn):
         """ Derived from `Q`. """
@@ -132,20 +143,19 @@ class P(object):
 
     def __invert__(self):
         """ Derived from `Q`. """
-        obj = self._new_instance()
+        obj = P()
         obj.add(self, self.AND)
         obj.negate()
         return obj
 
     def __str__(self):
+        str_param = (self.connector, ','.join([str(c) for c in self.children]))
         if self.negated:
-            return '(NOT (%s: %s))' % (self.connector, ', '.join([str(c) for c
-                    in self.children]))
-        return '(%s: %s)' % (self.connector, ', '.join([str(c) for c in
-                self.children]))
+            return '(~({0}{1}))'.format(*str_param)
+        return '({0}{1})'.format(*str_param)
 
     def __deepcopy__(self, memodict):
-        obj = P(connector=self.connector, negated=self.negated, if_false=self.if_false, if_true=self.if_true)
+        obj = P(connector=self.connector, negated=self.negated)
         obj.children = copy.deepcopy(self.children, memodict)
         obj.subtree_parents = copy.deepcopy(self.subtree_parents, memodict)
         return obj
@@ -163,7 +173,7 @@ class P(object):
         return other in self.children
 
     def _new_instance(self):
-        return P(self.children, self.connector, self.negated, self.if_false, self.if_true)
+        return P(self.children, self.connector, self.negated)
 
     def add(self, node, conn_type):
         if node in self.children and conn_type == self.connector:
@@ -172,10 +182,6 @@ class P(object):
             self.connector = conn_type
         if self.connector == conn_type:
             if isinstance(node, P) and (node.connector == conn_type or len(node) == 1):
-                if node.if_false:
-                    self.if_false = node.if_false
-                if node.if_true:
-                    self.if_true = node.if_true
                 self.children.extend(node.children)
             else:
                 self.children.append(node)
@@ -213,5 +219,16 @@ class P(object):
 
 class Arg(object):
 
-    def __init__(self, argument):
+    def __init__(self, argument, request=None):
         self.argument = argument
+
+    def __str__(self):
+        return 'Arg({})'.format(self.argument)
+
+
+if settings.PERMISSIONSX_CACHING:
+
+    def refresh_permissions(sender, request, user, **kwargs):
+        permissions_cache.invalidate_user_cache(request, str(user.pk))
+
+    user_logged_in.connect(refresh_permissions)

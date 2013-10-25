@@ -12,7 +12,11 @@ from permissionsx.tests.models import AnonymousProfile
 
 user_is_authenticated = P(user__is_authenticated=True)
 user_is_staff = P(user__is_staff=True)
-user_is_superuser= P(user__is_superuser=True)
+user_is_superuser = P(user__is_superuser=True)
+
+
+OVERRIDE_TRUE = 'Override returns True'
+OVERRIDE_FALSE = 'Override returns False'
 
 
 def if_override(x): return(x)
@@ -96,3 +100,8 @@ class NegatedOverrideIfTrueFalsePermissions(Permissions):
 class NestedNegatedOverridePermissions(Permissions):
 
     permissions = P(P(user__is_authenticated=False) & ~P(user__is_authenticated=True, if_true=if_true_override, if_false=if_false_override))
+
+
+class NestedNegatedPermissions(Permissions):
+
+    permissions = P(~P(user__is_authenticated=False) & P(P(user__is_authenticated=True) | ~P(user__is_authenticated=False)))
