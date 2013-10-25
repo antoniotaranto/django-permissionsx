@@ -160,6 +160,7 @@ Full Example
             is_editor = models.BooleanField()
             is_administrator = models.BooleanField()
 
+        
         class AnonymousProfile(object):
 
             user = None

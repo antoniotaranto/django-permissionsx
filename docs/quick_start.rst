@@ -15,6 +15,10 @@ Quick Start
 
 .. code-block:: python
 
+        from permissionsx.models import P
+        from permissionsx.models import Permissions
+
+
         class ManagerPermissions(Permissions):
 
             permissions = P(user__is_staff=True) & P(user__is_manager=True)
@@ -27,8 +31,6 @@ Quick Start
 
         from django.views.generic import ListView
 
-        from permissionsx.models import P
-        from permissionsx.models import Permissions
         from permissionsx.contrib.django import DjangoViewMixin
 
         from newspaper.profiles.permissions import ManagerPermissions
