@@ -5,16 +5,16 @@ python:
   - 3.2
   - 3.3
 install:
-  - pip install https://github.com/django/django/archive/${DJANGO}.zip#egg=django
-  - pip install coveralls --use-mirrors
-  - python setup.py -q install
+  - pip install https://github.com/django/django/archive/${DJANGO}.zip#egg=django coverage coveralls --use-mirrors
+  - pip install . --use-mirrors
 branches:
   only:
     - master
 script:
   - coverage run --source=permissionsx setup.py test
 after_success:
-  coveralls
+  - coverage report --omit "permissionsx/tests/*,permissionsx/utils.py,permissionsx/settings.py" -m
+  - coveralls
 env:
   - DJANGO=1.4.8
   - DJANGO=1.5.4
