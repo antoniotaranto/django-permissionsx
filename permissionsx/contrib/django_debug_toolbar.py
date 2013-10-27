@@ -17,6 +17,7 @@ from permissionsx.utils import get_class
 
 
 class PermissionsDebugPanel(DebugPanel):
+    """A django-debug-toolbar panel useful for setting up permissions."""
 
     name = 'PermissionsX'
     template = 'permissionsx/panels/permissionsx.html'

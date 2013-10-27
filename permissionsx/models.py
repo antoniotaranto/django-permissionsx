@@ -18,7 +18,15 @@ logger = logging.getLogger('permissionsx')
 
 
 class Permissions(object):
+    """Base class for defining permissions. Usage:
+    ::
+        permissions_class = SuperuserPermissions
 
+    Or when there is no need of reusing permissions in other parts of the code:
+    ::
+        permissions_class = Permissions(P(user__is_superuser=True))
+
+    """
     permissions = None
 
     def __init__(self, *args, **kwargs):
@@ -58,6 +66,7 @@ class Permissions(object):
                     child_copy = copy.copy(child)
                     if_true = child_copy.pop('if_true', None)
                     if_false = child_copy.pop('if_false', None)
+                    # NOTE: list() used for Python 3.x compatibility.
                     items = list(child_copy.items())[0]
                     result = self.permissions_evaluate(request, items[0], items[1])
                     if subtree.negated:
@@ -74,9 +83,24 @@ class Permissions(object):
                 return not False in children_results
 
     def get_permissions(self, request=None):
+        """Used for overriding :attr:`permissions` if some of the values used for authorization
+        must be compared with request object.
+
+        """
         return self.permissions
 
     def set_request_objects(self, request, **kwargs):
+        """Used when there is a need to attach non-default objects to the :class:`HttpRequest` instance.
+        For example, if you have a :class:`DetailView` and you want to check permissions against
+        a specific object (e.g. its ownership), you could do following:
+        ::
+            def get_permissions(self, request=None):
+                return P(object__owner=request.user)
+
+            def set_request_objects(self, request, **kwargs):
+                request.object  = Object.objects.get(slug=kwargs.get('slug'))
+
+        """
         pass
 
     def check_permissions(self, request=None, **kwargs):
@@ -89,7 +113,7 @@ class Permissions(object):
 
 
 class P(object):
-    """ Based on `django.db.models.query_utils.Q` mixed with `django.utils.tree.Node`. """
+    """Based on `django.db.models.query_utils.Q` mixed with `django.utils.tree.Node`."""
 
     AND = '&'
     OR = '|'
@@ -199,7 +223,18 @@ class P(object):
 
 
 class Arg(object):
+    """This is a wrapper class used with :class:`P` instances to change behaviour of
+    :meth:`Permissions.permissions_evaluate` method. If :class:`Arg` is passed as a value
+    of keyword argument, its :attr:`argument` attribute will be used to retrieve attribute
+    of the request object, e.g.:
+    ::
+        P(user__get_profile__has_access_to=Arg('invoice'))
 
+    Will translate to:
+    ::
+        is_authorized = request.user.get_profile().has_access_to(request.invoice)
+
+    """
     def __init__(self, argument, request=None):
         self.argument = argument
 

@@ -8,7 +8,6 @@ Automatically generated documentation:
     :maxdepth: 1
 
     models
-    utils
     contrib.django
     contrib.django_debug_toolbar
     contrib.tastypie

@@ -12,7 +12,13 @@ from tastypie.exceptions import Unauthorized
 
 
 class TastypieAuthorization(Authorization):
+    """Inherits from :class:`tastypie.authorization.Authorization`. Usage:
+    ::
+        class StaffOnlyAuthorization(TastypieAuthorization):
 
+            permissions_class = StaffPermissions
+
+    """
     def __init__(self, *args, **kwargs):
         super(TastypieAuthorization, self).__init__(*args, **kwargs)
         self.permissions = self.permissions_class()
