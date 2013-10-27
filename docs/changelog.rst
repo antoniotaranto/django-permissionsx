@@ -2,6 +2,12 @@
 Changelog
 =========
 
+1.1.4
+=====
+
+* Fixed Django debug toolbar panel.
+* Removed caching (`explanation <https://github.com/thinkingpotato/django-permissionsx/issues/21>`_).
+
 1.1.3
 =====
 
