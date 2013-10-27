@@ -53,8 +53,9 @@ class PermissionsDebugPanel(DebugPanel):
         try:
             view_info['view_name'] = get_name_from_obj(view)
             try:
+                permissions = view.permissions_class() if callable(view.permissions_class) else view.permissions_class
                 view_info['view_permissions'] = get_name_from_obj(view.permissions_class)
-                view_info['view_rules'] = view.permissions_class().get_permissions(request)
+                view_info['view_rules'] = permissions.get_permissions(request).__dict__
             except AttributeError:
                 # NOTE: No permissions defined for this view.
                 pass
