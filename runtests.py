@@ -41,7 +41,6 @@ configure_settings = {
         os.path.join(os.path.abspath(os.path.dirname(__file__)), 'tests/templates'),
     ),
     'ROOT_URLCONF': 'permissionsx.tests.test_urls',
-    'PERMISSIONSX_CACHING': False,
 }
 
 settings.configure(**configure_settings)

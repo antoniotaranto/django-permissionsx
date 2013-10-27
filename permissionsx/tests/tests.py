@@ -58,10 +58,6 @@ class PermissionsDefinitionsTests(UtilityTestCase):
         self.assertFalse(self.permissions_for_request(AndStaffSuperuserPermissions, request_user))
         self.staff.is_superuser = True
         self.admin.is_staff = True
-        # NOTE: User must log in again if permissions changed - cleaning
-        #       cache for a specific user.
-        login(request_staff, self.staff)
-        login(request_admin, self.admin)
         self.assertTrue(self.permissions_for_request(AndStaffSuperuserPermissions, request_staff))
         self.assertTrue(self.permissions_for_request(AndStaffSuperuserPermissions, request_admin))
         self.assertFalse(self.permissions_for_request(AndStaffSuperuserPermissions, request_user))
@@ -74,7 +70,6 @@ class PermissionsDefinitionsTests(UtilityTestCase):
         self.assertFalse(self.permissions_for_request(IsPublicPermissions, request_admin))
         self.assertFalse(self.permissions_for_request(AuthenticatedPermissions, request_admin))
         self.user.get_profile().is_public = True
-        login(request_user, self.user)
         self.assertTrue(self.permissions_for_request(IsPublicPermissions, request_user))
         self.assertFalse(self.permissions_for_request(IsPublicPermissions, request_admin))
 
@@ -89,8 +84,6 @@ class PermissionsDefinitionsTests(UtilityTestCase):
         self.assertFalse(self.permissions_for_request(NegatePermissions, request_admin))
         self.user.get_profile().is_public = True
         self.admin.get_profile().is_public = True
-        login(request_user, self.user)
-        login(request_admin, self.admin)
         self.assertTrue(self.permissions_for_request(NegatePermissions, request_user))
         self.assertTrue(self.permissions_for_request(NegatePermissions, request_admin))
 
@@ -100,10 +93,8 @@ class PermissionsDefinitionsTests(UtilityTestCase):
         login(request_admin, self.admin)
         self.assertFalse(self.permissions_for_request(NestedPermissions, request_admin))
         self.admin.username = 'admin2'
-        login(request_admin, self.admin)
         self.assertFalse(self.permissions_for_request(NestedPermissions, request_admin))
         self.admin.is_staff = True
-        login(request_admin, self.admin)
         self.assertTrue(self.permissions_for_request(NestedPermissions, request_admin))
 
     def test_request_params(self):

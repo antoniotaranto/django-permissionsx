@@ -12,7 +12,6 @@ from django.core.exceptions import ImproperlyConfigured
 from django.contrib.auth.signals import user_logged_in
 
 from permissionsx import settings
-from permissionsx.cache import *
 
 
 logger = logging.getLogger('permissionsx')
@@ -83,26 +82,9 @@ class Permissions(object):
     def check_permissions(self, request=None, **kwargs):
         self.set_request_objects(request, **kwargs)
         permissions = self.get_permissions(request)
-        if settings.PERMISSIONSX_CACHING:
-            perm_str = permissions.cached_str
-            if perm_str is None:
-                perm_str = str(permissions)
-                permissions.cached_str = perm_str
-            cache_key = permissions_cache.get_key(request, perm_str)
-        else:
-            cache_key = None
         if permissions:
-            result = None
             setattr(request, 'permissionsx_return_overrides', [])
-            if settings.PERMISSIONSX_CACHING:
-                result, overrides = permissions_cache.get_cache(request, cache_key)
-                if overrides:
-                    request.permissionsx_return_overrides = overrides
-            if result is None:
-                result = self.permissions_traversal(request, permissions)
-                if settings.PERMISSIONSX_CACHING:
-                    permissions_cache.set_cache(request, cache_key, (result, request.permissionsx_return_overrides))
-            return result
+            return self.permissions_traversal(request, permissions)
         return True
 
 
@@ -122,7 +104,6 @@ class P(object):
         self.connector = connector or self.default
         self.subtree_parents = []
         self.negated = negated
-        self.cached_str = None
 
     def _combine(self, other, conn):
         """ Derived from `Q`. """
@@ -224,11 +205,3 @@ class Arg(object):
 
     def __str__(self):
         return 'Arg({})'.format(self.argument)
-
-
-if settings.PERMISSIONSX_CACHING:
-
-    def refresh_permissions(sender, request, user, **kwargs):
-        permissions_cache.invalidate_user_cache(request, str(user.pk))
-
-    user_logged_in.connect(refresh_permissions)
