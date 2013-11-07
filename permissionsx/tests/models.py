@@ -11,7 +11,7 @@ from django.db import models
 class Profile(models.Model):
 
     user = models.ForeignKey('auth.User')
-    is_public = models.BooleanField()
+    is_public = models.BooleanField(default=False)
 
     def is_attached_to_user(self, user):
         return self.user == user
