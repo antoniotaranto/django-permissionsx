@@ -150,23 +150,23 @@ Full Example
 
 .. code-block:: python
 
-        from django.db import models
+    from django.db import models
 
 
-        class Profile(models.Model):
+    class Profile(models.Model):
 
-            user = models.OneToOneField('auth.User')
-            is_author = models.BooleanField()
-            is_editor = models.BooleanField()
-            is_administrator = models.BooleanField()
+        user = models.OneToOneField('auth.User')
+        is_author = models.BooleanField()
+        is_editor = models.BooleanField()
+        is_administrator = models.BooleanField()
 
-        
-        class AnonymousProfile(object):
 
-            user = None
-            is_author = False
-            is_editor = False
-            is_administrator = False
+    class AnonymousProfile(object):
+
+        user = None
+        is_author = False
+        is_editor = False
+        is_administrator = False
 
 
 :file:`profiles/permissions.py`
@@ -175,91 +175,91 @@ Full Example
 
 .. code-block:: python
 
-        from permissionsx.models import P
-        from permissionsx.models import Permissions
+    from permissionsx.models import P
+    from permissionsx.models import Permissions
 
-        from newspaper.profiles.models import AnonymousProfile
-        from newspaper.articles.models import Article
-
-
-        editor_or_administrator = P(user__get_profile__is_editor=True) | P(user__get_profile__is_administrator=True)
+    from newspaper.profiles.models import AnonymousProfile
+    from newspaper.articles.models import Article
 
 
-        class ProfilePermissions(Permissions):
-
-            def set_request_objects(self, request, **kwargs):
-                if request.user.is_anonymous():
-                    request.user.get_profile = lambda: AnonymousProfile()
+    editor_or_administrator = P(user__get_profile__is_editor=True) | P(user__get_profile__is_administrator=True)
 
 
-        class UserPermissions(Permissions):
+    class ProfilePermissions(Permissions):
 
-            permissions = P(user__is_authenticated=True)
-
-
-        class AuthorPermissions(ProfilePermissions):
-
-            permissions = P(user__get_profile__is_author=True) | editor_or_administrator
+        def set_request_objects(self, request, **kwargs):
+            if request.user.is_anonymous():
+                request.user.get_profile = lambda: AnonymousProfile()
 
 
-        class StaffPermissions(ProfilePermissions):
+    class UserPermissions(Permissions):
 
-            permissions = editor_or_administrator
+        permissions = P(user__is_authenticated=True)
+
+
+    class AuthorPermissions(ProfilePermissions):
+
+        permissions = P(user__get_profile__is_author=True) | editor_or_administrator
+
+
+    class StaffPermissions(ProfilePermissions):
+
+        permissions = editor_or_administrator
 
 
 :file:`articles/views.py`
 
 .. code-block:: python
 
-        from django.views.generic import (
-            ListView,
-            DeleteView,
-        )
-        from django.core.urlresolvers import reverse_lazy
+    from django.views.generic import (
+        ListView,
+        DeleteView,
+    )
+    from django.core.urlresolvers import reverse_lazy
 
-        from permissionsx.contrib.django import DjangoViewMixin
+    from permissionsx.contrib.django import DjangoViewMixin
 
-        from newspaper.profiles.permissions import (
-            AuthorPermissions,
-            StaffPermissions,
-        )
-        from newspaper.articles.models import Article
-
-
-        class ArticleListView(DjangoViewMixin, ListView):
-
-            queryset = Article.objects.filter(is_published=True)
-            permissions_class = AuthorPermissions
+    from newspaper.profiles.permissions import (
+        AuthorPermissions,
+        StaffPermissions,
+    )
+    from newspaper.articles.models import Article
 
 
-        class ArticleDeleteView(DjangoViewMixin, DeleteView):
+    class ArticleListView(DjangoViewMixin, ListView):
 
-            model = Article
-            success_url = reverse_lazy('article_list')
-            permissions_class = StaffPermissions
+        queryset = Article.objects.filter(is_published=True)
+        permissions_class = AuthorPermissions
+
+
+    class ArticleDeleteView(DjangoViewMixin, DeleteView):
+
+        model = Article
+        success_url = reverse_lazy('article_list')
+        permissions_class = StaffPermissions
 
 
 :file:`articles/templates/articles/comment_list.html`
 
 .. code-block:: html
 
-        {% load permissionsx_tags %}
+    {% load permissionsx_tags %}
 
-        {% permissions "newspaper.profiles.permissions.StaffPermissions" as comment_blocking_granted %}
+    {% permissions "newspaper.profiles.permissions.StaffPermissions" as comment_blocking_granted %}
 
-        {% if comment_blocking_granted %}
-            <a href="#" class="btn block-comment" data-comment-id="{{ comment.pk }}">Block this comment</a>
+    {% if comment_blocking_granted %}
+        <a href="#" class="btn block-comment" data-comment-id="{{ comment.pk }}">Block this comment</a>
+    {% endif %}
+
+    {% comment %}NOTE: Checks permissions for objects in a list.{% endcomment %}
+    {% for object in object_list %}
+        {% permissions "newspaper.profiles.permissions.AuthorIfNotPublishedPermissions" slug=object.slug as can_change_object_granted %}
+        {% if can_change_object_granted %}
+            <a href="{% url 'article_update' object.slug %}" class="bt btnn-success">Edit</a>
+            <a href="{% url 'article_delete' object.slug %}" class="btn btn-danger">Delete</a>
         {% endif %}
-
-        {% comment %}NOTE: Checks permissions for objects in a list.{% endcomment %}
-        {% for object in object_list %}
-            {% permissions "newspaper.profiles.permissions.AuthorIfNotPublishedPermissions" slug=object.slug as can_change_object_granted %}
-            {% if can_change_object_granted %}
-                <a href="{% url 'article_update' object.slug %}" class="bt btnn-success">Edit</a>
-                <a href="{% url 'article_delete' object.slug %}" class="btn btn-danger">Delete</a>
-            {% endif %}
-                <a href="{% url 'article_view' object.slug %}" class="btn btn-whatever">View</a>
-        {% endfor $}
+            <a href="{% url 'article_view' object.slug %}" class="btn btn-whatever">View</a>
+    {% endfor %}
 
 
 Integration with Tastypie
@@ -269,42 +269,42 @@ Integration with Tastypie
 
 .. code-block:: python
 
-        from permissionsx.contrib.tastypie import TastypieAuthorization
+    from permissionsx.contrib.tastypie import TastypieAuthorization
 
-        from newspaper.profiles.permissions import (
-            UserPermissions,
-            StaffPermissions,
-        )
-        from newspaper.articles.models import (
-            Article,
-            Comment,
-        )
-
-
-        class StaffOnlyAuthorization(TastypieAuthorization):
-
-            permissions_class = StaffPermissions
+    from newspaper.profiles.permissions import (
+        UserPermissions,
+        StaffPermissions,
+    )
+    from newspaper.articles.models import (
+        Article,
+        Comment,
+    )
 
 
-        class CommentingAuthorization(TastypieAuthorization):
+    class StaffOnlyAuthorization(TastypieAuthorization):
 
-            permissions_class = UserPermissions
+        permissions_class = StaffPermissions
 
-            def create_list(self, object_list, bundle):
-                raise Unauthorized()
 
-            def update_list(self, object_list, bundle):
-                raise Unauthorized()
+    class CommentingAuthorization(TastypieAuthorization):
 
-            def update_detail(self, object_list, bundle):
-                # NOTE: This overrides `self.permissions` just for this single case.
-                return StaffPermissions().check_permissions(bundle.request)
+        permissions_class = UserPermissions
 
-            def delete_list(self, object_list, bundle):
-                raise Unauthorized()
+        def create_list(self, object_list, bundle):
+            raise Unauthorized()
 
-            def delete_detail(self, object_list, bundle):
-                raise Unauthorized()
+        def update_list(self, object_list, bundle):
+            raise Unauthorized()
+
+        def update_detail(self, object_list, bundle):
+            # NOTE: This overrides `self.permissions` just for this single case.
+            return StaffPermissions().check_permissions(bundle.request)
+
+        def delete_list(self, object_list, bundle):
+            raise Unauthorized()
+
+        def delete_detail(self, object_list, bundle):
+            raise Unauthorized()
 
 
 Response with custom message and redirect URL
@@ -314,32 +314,32 @@ Response with custom message and redirect URL
 
 .. code-block:: python
 
-        from django.contrib import messages
-        from django.core.urlresolvers import reverse_lazy
-        from django.utils.translation import ugettext_lazy as _
-        from django.views.generic import CreateView
+    from django.contrib import messages
+    from django.core.urlresolvers import reverse_lazy
+    from django.utils.translation import ugettext_lazy as _
+    from django.views.generic import CreateView
 
-        from permissionsx.contrib.django import DjangoViewMixin
-        from permissionsx.contrib.django import MessageRedirectView
+    from permissionsx.contrib.django import DjangoViewMixin
+    from permissionsx.contrib.django import MessageRedirectView
 
-        from newspaper.profiles.permissions import StaffPermissions
-        from newspaper.articles.models import Article
-        from newspaper.articles.forms import ArticleCreateForm
-
-
-        class NotStaffRedirectView(MessageRedirectView):
-
-            message = (messages.warning, _('Insufficient permissions!'))
-            redirect_url = reverse_lazy('account_login')
+    from newspaper.profiles.permissions import StaffPermissions
+    from newspaper.articles.models import Article
+    from newspaper.articles.forms import ArticleCreateForm
 
 
-        class ArticleCreateView(DjangoViewMixin, CreateView):
+    class NotStaffRedirectView(MessageRedirectView):
 
-            model = Article
-            success_url = reverse_lazy('article_list')
-            form_class = ArticleCreateForm
-            permissions_class = StaffPermissions
-            permissions_response_class = NotStaffRedirectView
+        message = (messages.warning, _('Insufficient permissions!'))
+        redirect_url = reverse_lazy('account_login')
+
+
+    class ArticleCreateView(DjangoViewMixin, CreateView):
+
+        model = Article
+        success_url = reverse_lazy('article_list')
+        form_class = ArticleCreateForm
+        permissions_class = StaffPermissions
+        permissions_response_class = NotStaffRedirectView
 
 
 Response with action overridden on a P() level
@@ -349,29 +349,28 @@ Response with action overridden on a P() level
 
 .. code-block:: python
 
-        from django.contrib import messages
-        from django.core.urlresolvers import reverse_lazy
-        from django.utils.translation import ugettext_lazy as _
-        from django.views.generic import ListView
+    from django.contrib import messages
+    from django.core.urlresolvers import reverse_lazy
+    from django.utils.translation import ugettext_lazy as _
+    from django.views.generic import ListView
 
-        from permissionsx.models import P
-        from permissionsx.models import Permissions
-        from permissionsx.contrib.django import DjangoViewMixin
-        from permissionsx.contrib.django import MessageRedirectView
-
-
-        class NotStaffRedirectView(MessageRedirectView):
-
-            message = (messages.warning, _('Insufficient permissions!'))
-            redirect_url = reverse_lazy('account_login')
+    from permissionsx.models import P
+    from permissionsx.models import Permissions
+    from permissionsx.contrib.django import DjangoViewMixin
+    from permissionsx.contrib.django import MessageRedirectView
 
 
-        class ArticleListView(DjangoViewMixin, ListView):
+    class NotStaffRedirectView(MessageRedirectView):
 
-            permissions_class = Permissions(
-                P(user__is_staff=True, if_false=NotStaffRedirectView.as_view())
-            )
+        message = (messages.warning, _('Insufficient permissions!'))
+        redirect_url = reverse_lazy('account_login')
 
+
+    class ArticleListView(DjangoViewMixin, ListView):
+
+        permissions_class = Permissions(
+            P(user__is_staff=True, if_false=NotStaffRedirectView.as_view())
+        )
 
 
 Response with action overridden on a P() level (passing view directly)
@@ -381,27 +380,27 @@ Response with action overridden on a P() level (passing view directly)
 
 .. code-block:: python
 
-        from django.contrib import messages
-        from django.core.urlresolvers import reverse_lazy
-        from django.utils.translation import ugettext_lazy as _
-        from django.views.generic import ListView
+    from django.contrib import messages
+    from django.core.urlresolvers import reverse_lazy
+    from django.utils.translation import ugettext_lazy as _
+    from django.views.generic import ListView
 
-        from permissionsx.models import P
-        from permissionsx.models import Permissions
-        from permissionsx.contrib.django import DjangoViewMixin
-        from permissionsx.contrib.django import MessageRedirectView
+    from permissionsx.models import P
+    from permissionsx.models import Permissions
+    from permissionsx.contrib.django import DjangoViewMixin
+    from permissionsx.contrib.django import MessageRedirectView
 
 
-        class ArticleListView(DjangoViewMixin, ListView):
+    class ArticleListView(DjangoViewMixin, ListView):
 
-            permissions_class = Permissions(
-                P(user__is_staff=True,
-                    if_false=MessageRedirectView.as_view(
-                        redirect_url=reverse_lazy('account_login'),
-                        message=(messages.warning, _('Error!')),
-                    )
+        permissions_class = Permissions(
+            P(user__is_staff=True,
+                if_false=MessageRedirectView.as_view(
+                    redirect_url=reverse_lazy('account_login'),
+                    message=(messages.warning, _('Error!')),
                 )
             )
+        )
 
 
 Reusing permissions
@@ -411,18 +410,18 @@ Reusing permissions
 
 .. code-block:: python
 
-        editor_or_administrator = P(user__get_profile__is_editor=True) | P(user__get_profile__is_administrator=True)
+    editor_or_administrator = P(user__get_profile__is_editor=True) | P(user__get_profile__is_administrator=True)
 
-        class AuthorIfNotPublishedPermissions(ProfilePermissions):
+    class AuthorIfNotPublishedPermissions(ProfilePermissions):
 
-            permissions = editor_or_administrator
+        permissions = editor_or_administrator
 
-            def get_permissions(self, request=None):
-                return self.permissions | P(
-                    P(user__get_profile__is_author=True) &
-                    P(article__is_published=False) &
-                    P(article__author=request.user)
-                )
+        def get_permissions(self, request=None):
+            return self.permissions | P(
+                P(user__get_profile__is_author=True) &
+                P(article__is_published=False) &
+                P(article__author=request.user)
+            )
 
 
 Setting request objects
@@ -432,12 +431,12 @@ Setting request objects
 
 .. code-block:: python
 
-        class ArticlePermissions(ProfilePermissions):
+    class ArticlePermissions(ProfilePermissions):
 
-            permissions = P(user__is_authenticated)
+        permissions = P(user__is_authenticated)
 
-            def set_request_objects(self, request, **kwargs):
-                request.article = Article.objects.get(slug=kwargs.get('slug'))
+        def set_request_objects(self, request, **kwargs):
+            request.article = Article.objects.get(slug=kwargs.get('slug'))
 
 
 Using permissions in templates
@@ -447,27 +446,120 @@ Using permissions in templates
 
 .. code-block:: html
 
-        {% load permissionsx_tags %}
+    {% load permissionsx_tags %}
 
-        {% permissions 'newspaper.profiles.permissions.AuthorPermissions' as user_is_author %}
-        {% permissions 'newspaper.profiles.permissions.StaffPermissions' as user_is_staff %}
-        {% permissions 'newspaper.profiles.permissions.AdministratorPermissions' as user_is_administrator %}
+    {% permissions 'newspaper.profiles.permissions.AuthorPermissions' as user_is_author %}
+    {% permissions 'newspaper.profiles.permissions.StaffPermissions' as user_is_staff %}
+    {% permissions 'newspaper.profiles.permissions.AdministratorPermissions' as user_is_administrator %}
 
-        <ul id="utility-navigation>
-            {% if user_is_administrator %}
-                <a href="#">Add a new author</a>
-            {% endif %}
-            {% if user_is_staff %}
-                <a href="#">Publish article</a>
-            {% endif %}
+    <ul id="utility-navigation>
+        {% if user_is_administrator %}
+            <a href="#">Add a new author</a>
+        {% endif %}
+        {% if user_is_staff %}
+            <a href="#">Publish article</a>
+        {% endif %}
         </ul>
 
 :file:`templates/articles/article_detail.html`
 
 .. code-block:: html
 
-        {% extends "base.html" %}
+    {% extends "base.html" %}
 
-        {% if user_is_author %}
-            <a href="#">Write article</a>
-        {% endif %}
+    {% if user_is_author %}
+        <a href="#">Write article</a>
+    {% endif %}
+
+
+Paid subscription expired, redirect user if trying to access paid content
+-------------------------------------------------------------------------
+
+:file:`profiles/models.py`
+
+.. code-block:: python
+
+    import datetime
+
+    from django.db import models
+
+
+    class Profile(models.Model):
+
+        user = models.OneToOneField('auth.User', max_length=50)
+        [...]
+
+        @property
+        def is_subscriber(self):
+            if self.is_author or self.is_editor or self.is_administrator:
+                return True
+            if self.date_expires is None:
+                return False
+            else:
+                return datetime.date.today() < self.date_expires
+
+
+:file:`profiles/permissions.py`
+
+.. code-block:: python
+
+    from permissionsx.models import P
+    from permissionsx.models import Permissions
+
+    from newspaper.profiles.models import AnonymousProfile
+    from newspaper.content.views import SubscriptionExpiredRedirectView
+
+
+    class ProfilePermissions(Permissions):
+
+        def set_request_objects(self, request, **kwargs):
+            if request.user.is_anonymous():
+                request.user.get_profile = lambda: AnonymousProfile()
+
+
+    class SubscriberPermissions(ProfilePermissions):
+
+        permissions = P(user__is_authenticated=True) & P(
+            user__get_profile__is_subscriber=True, if_false=SubscriptionExpiredRedirectView.as_view()
+        )
+
+
+:file:`content/views.py`
+
+.. code-block:: python
+
+    from django.contrib import messages
+    from django.core.urlresolvers import reverse_lazy
+    from django.views.generic import DetailView
+
+    from permissionsx.models import P
+    from permissionsx.models import Permissions
+    from permissionsx.contrib.django import DjangoViewMixin
+    from permissionsx.contrib.django import MessageRedirectView
+
+    from newspaper.profiles.permissions import SubscriberPermissions
+
+
+    class SubscriptionExpiredRedirectView(DjangoViewMixin, MessageRedirectView):
+
+        message = (messages.warning, 'Your subscription has expired!')
+        redirect_url = reverse_lazy('subscribe_form')
+        permissions_class = Permissions(P(user__is_authenticated=True))
+
+
+    class ArticleDetailView(DjangoViewMixin, DetailView):
+
+        model = Article
+        permissions_class = SubscriberPermissions
+
+
+    class SongDetailView(DjangoViewMixin, DetailView):
+
+        model = Music
+        permissions_class = SubscriberPermissions
+
+
+    class PictureDetailView(DjangoViewMixin, DetailView):
+
+        model = Picture
+        permissions_class = SubscriberPermissions
