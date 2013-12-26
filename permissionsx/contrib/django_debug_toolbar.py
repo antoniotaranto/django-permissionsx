@@ -23,10 +23,6 @@ class PermissionsDebugPanel(DebugPanel):
     template = 'permissionsx/panels/permissionsx.html'
     has_content = True
 
-    def __init__(self, *args, **kwargs):
-        super(PermissionsDebugPanel, self).__init__(*args, **kwargs)
-        self._views_cache = {}
-
     def nav_title(self):
         return _('Permissions')
 
@@ -56,7 +52,7 @@ class PermissionsDebugPanel(DebugPanel):
             try:
                 permissions = view.permissions_class() if callable(view.permissions_class) else view.permissions_class
                 view_info['view_permissions'] = get_name_from_obj(view.permissions_class)
-                view_info['view_rules'] = permissions.get_permissions(request).__dict__
+                view_info['view_rules'] = str(permissions.get_permissions(request))
             except AttributeError:
                 # NOTE: No permissions defined for this view.
                 pass
