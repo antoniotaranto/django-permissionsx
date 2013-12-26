@@ -91,30 +91,15 @@ class Permissions(object):
             else:
                 return not False in children_results
 
-    def get_permissions(self, request=None):
+    def get_permissions(self, request=None, **kwargs):
         """Used for overriding :attr:`permissions` if some of the values used for authorization
         must be compared with request object.
 
         """
         return self.permissions
 
-    def set_request_objects(self, request, **kwargs):
-        """Used when there is a need to attach non-default objects to the :class:`HttpRequest` instance.
-        For example, if you have a :class:`DetailView` and you want to check permissions against
-        a specific object (e.g. its ownership), you could do following:
-        ::
-            def get_permissions(self, request=None):
-                return P(object__owner=request.user)
-
-            def set_request_objects(self, request, **kwargs):
-                request.object  = Object.objects.get(slug=kwargs.get('slug'))
-
-        """
-        pass
-
-    def check_permissions(self, request=None, **kwargs):
-        self.set_request_objects(request, **kwargs)
-        permissions = self.get_permissions(request)
+    def check_permissions(self, request=None, *args, **kwargs):
+        permissions = self.get_permissions(request, **kwargs)
         if permissions:
             setattr(request, 'permissionsx_return_overrides', [])
             return self.permissions_traversal(request, permissions)
