@@ -74,9 +74,10 @@ class DjangoViewMixin(object):
             raise ImproperlyConfigured('"permissions_class" is not defined for {}'.format(self.__class__.__name__))
         check_result = permissions.check_permissions(request, **kwargs)
         # NOTE: Check if any of the permissions wanted to override default response.
-        if request.permissionsx_return_overrides:
-            # NOTE: Execute override and pass View parameters.
-            return request.permissionsx_return_overrides[0](request, *args, **kwargs)
+        if hasattr(request, 'permissionsx_return_overrides'):
+            if request.permissionsx_return_overrides:
+                # NOTE: Execute override and pass View parameters.
+                return request.permissionsx_return_overrides[0](request, *args, **kwargs)
         # NOTE: Access granted, return the requested view.
         if check_result:
             return super(DjangoViewMixin, self).dispatch(request, *args, **kwargs)
