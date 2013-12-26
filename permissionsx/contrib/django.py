@@ -7,6 +7,7 @@ PermissionsX - Authorization for Django.
 """
 from __future__ import absolute_import
 
+import copy
 import logging
 
 from django import template
@@ -116,7 +117,16 @@ def permissions(context, permissions_path, **kwargs):
     # NOTE: Dummy request keeps temporary template objects without affecting the real
     #       request. Otherwise iterating over them would change the object that was
     #       assigned at the view level.
-    dummy_request = DummyRequest()
-    dummy_request.user = context['user']
-    granted = permissions_class().check_permissions(dummy_request, **kwargs)
+    if 'request' in context:
+        dummy_request = copy.copy(context['request'])
+    else:
+        dummy_request = DummyRequest()
+        dummy_request.user = context['user']
+    try:
+        granted = permissions_class().check_permissions(dummy_request, **kwargs)
+    except AttributeError:
+        # NOTE: AttributeError is _usually_ related to anonymous user being
+        #       used for checking permissions. TODO: Should be reviewed once
+        #       Django custom user model gets its anonymous counterpart.
+        return False
     return granted

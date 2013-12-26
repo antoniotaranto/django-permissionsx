@@ -47,13 +47,22 @@ class Permissions(object):
             attr = getattr(cmp_obj, word)
             partial = attr() if callable(attr) else attr
             cmp_obj = partial
-        attr = getattr(cmp_obj, last_word)
-        if callable(attr) and isinstance(argument, Arg):
-            return attr(getattr(request, argument.argument))
-        elif callable(attr):
-            partial = attr()
-        else:
-            partial = attr
+        try:
+            attr = getattr(cmp_obj, last_word)
+            if callable(attr) and isinstance(argument, Arg):
+                return attr(getattr(request, argument.argument))
+            elif callable(attr):
+                partial = attr()
+            else:
+                partial = attr
+            if isinstance(argument, Cmp):
+                argument = getattr(request, argument.argument)
+        except AttributeError:
+            # NOTE: If AttributeError happens here, it's probably because of
+            #       anonymous user being passed for permission checking.
+            #       In that case, deny by default. REVIEW once Django gets
+            #       custom anonymous user models.
+            return False
         return partial == argument
 
     def permissions_traversal(self, request, subtree):
@@ -240,3 +249,24 @@ class Arg(object):
 
     def __str__(self):
         return 'Arg({})'.format(self.argument)
+
+
+class Cmp(object):
+    """This is a wrapper class used with :class:`P` instances to change behaviour of
+    :meth:`Permissions.permissions_evaluate` method. If :class:`Cmp` is passed as a value
+    of keyword argument, its :attr:`argument` attribute will be used to retrieve attribute
+    of the request object, e.g.:
+    ::
+        P(user__get_profile__equals_to=Cmp('invoice'))
+
+    Will translate to:
+    ::
+        is_authorized = request.user.get_profile().equals_to == request.invoice
+
+    """
+    def __init__(self, argument, request=None):
+        self.argument = argument
+
+    def __str__(self):
+        return 'Cmp({})'.format(self.argument)
+
