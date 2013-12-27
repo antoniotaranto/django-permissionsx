@@ -44,7 +44,14 @@ class Permissions(object):
             raise ImproperlyConfigured('There is no request object matching "{}". Related to rule: "{}" in class "{}".'.format(word, expression, self.__class__.__name__))
         last_word = words.pop()
         for word in words:
-            attr = getattr(cmp_obj, word)
+            try:
+                attr = getattr(cmp_obj, word)
+            except AttributeError:
+                # NOTE: If AttributeError happens here, it's probably because of
+                #       anonymous user being passed for permission checking.
+                #       In that case, deny by default. REVIEW once Django gets
+                #       custom anonymous user models.
+                return False
             partial = attr() if callable(attr) else attr
             cmp_obj = partial
         try:
