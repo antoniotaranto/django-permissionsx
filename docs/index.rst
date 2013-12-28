@@ -14,7 +14,7 @@ Welcome to django-permissionsx's documentation!
 Introduction
 ============
 
-**django-permissionsx** is an alternative to `Django permissions system <https://docs.djangoproject.com/en/1.5/topics/auth/default/#topic-authorization>`_. The main difference is that this package does not store authorization logic in database, but instead allows defining permissions on the view level using concise syntax (similar to complex lookups using `Q`) and performs authorization checks against `HttpRequest <https://docs.djangoproject.com/en/1.5/ref/request-response/#httprequest-objects>`_ object.
+**django-permissionsx** is an alternative to `Django permissions system <https://docs.djangoproject.com/en/1.5/topics/auth/default/#topic-authorization>`_. The main difference is that this package does not store authorization logic in database, but instead allows defining permissions on the view level using concise syntax (similar to complex lookups using `Q`) and performs authorization checks against `HttpRequest <https://docs.djangoproject.com/en/1.5/ref/request-response/#httprequest-objects>`_ object. You could think of it as a wrapper around common patterns such as `@login_required` decorator or checking `request.user.is_authenticated()`.
 
 You will find that defining permissions is similar to filtering QuerySets and `complex lookups with Q objects <https://docs.djangoproject.com/en/1.5/topics/db/queries/#complex-lookups-with-q-objects>`_. For example:
 

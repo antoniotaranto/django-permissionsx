@@ -38,7 +38,7 @@ Arg
 ---
 :class:`permissionsx.models.Arg`
 
-:class:`Arg` is used when permissions need to be evaluated against another object attached to the :class:`HttpRequest` instance. This is most often used for checking access to specific objects, e.g.:
+:class:`Arg` is used when permissions checking involves passing parameter to a method of an object attached to the request. This is most often used for checking access to specific objects, e.g.:
 
 .. code-block:: python
 
@@ -49,6 +49,25 @@ Note that :class:`Arg` parameter is passed as a string. Basically, it is equival
 .. code-block:: python
 
     request.user.get_profile().has_access_to(request.invoice)
+
+
+Cmp
+---
+:class:`permissionsx.models.Cmp`
+
+:class:`Cmp` is used when permissions require comparing values of objects attached to the request even if the compared attributes are not currently available in the method scope. Also, :class:`Cmp` prevents exceptions from non-existing relations (e.g. `request.user.company` while `company` can be null).
+
+.. code-block:: python
+
+    P(company__main_address__city=Cmp('user.address.city'))
+
+Note that :class:`Cmp` parameter is passed as a string. It is equivalent to:
+
+.. code-block:: python
+
+    request.company.main_address.city == request.user.address.city
+
+So in this scenario, view is passed e.g. `kwargs` containing `{'slug': 'company-xyz'}`. Company XYZ instance is retrieved from database and its headquarter's city is compared to the one of a user currently accessing view. If these match, user is allowed to view page, can be redirected, shown a message etc.
 
 
 Permissions
@@ -171,8 +190,6 @@ Full Example
 
 :file:`profiles/permissions.py`
 
-.. warning:: Take a closer look at :class:`ProfilePermissions`: it attaches :class:`AnonymousProfile` to the request if user is not logged in.
-
 .. code-block:: python
 
     from permissionsx.models import P
@@ -185,24 +202,17 @@ Full Example
     editor_or_administrator = P(user__get_profile__is_editor=True) | P(user__get_profile__is_administrator=True)
 
 
-    class ProfilePermissions(Permissions):
-
-        def set_request_objects(self, request, **kwargs):
-            if request.user.is_anonymous():
-                request.user.get_profile = lambda: AnonymousProfile()
-
-
     class UserPermissions(Permissions):
 
         permissions = P(user__is_authenticated=True)
 
 
-    class AuthorPermissions(ProfilePermissions):
+    class AuthorPermissions(Permissions):
 
         permissions = P(user__get_profile__is_author=True) | editor_or_administrator
 
 
-    class StaffPermissions(ProfilePermissions):
+    class StaffPermissions(Permissions):
 
         permissions = editor_or_administrator
 
@@ -416,7 +426,7 @@ Reusing permissions
 
         permissions = editor_or_administrator
 
-        def get_permissions(self, request=None):
+        def get_permissions(self, request=None, **kwargs):
             return self.permissions | P(
                 P(user__get_profile__is_author=True) &
                 P(article__is_published=False) &
@@ -433,9 +443,7 @@ Setting request objects
 
     class ArticlePermissions(ProfilePermissions):
 
-        permissions = P(user__is_authenticated)
-
-        def set_request_objects(self, request, **kwargs):
+        def get_permissions(self, request, **kwargs):
             request.article = Article.objects.get(slug=kwargs.get('slug'))
 
 
@@ -454,22 +462,15 @@ Using permissions in templates
 
     <ul id="utility-navigation>
         {% if user_is_administrator %}
-            <a href="#">Add a new author</a>
+            <li><a href="#">Add a new author</a></li>
         {% endif %}
         {% if user_is_staff %}
-            <a href="#">Publish article</a>
+            <li><a href="#">Publish article</a></li>
         {% endif %}
-        </ul>
-
-:file:`templates/articles/article_detail.html`
-
-.. code-block:: html
-
-    {% extends "base.html" %}
-
-    {% if user_is_author %}
-        <a href="#">Write article</a>
-    {% endif %}
+        {% if user_is_author %}
+            <li><a href="#">Write article</a></li>
+        {% endif %}
+    </ul>
 
 
 Paid subscription expired, redirect user if trying to access paid content
@@ -506,18 +507,10 @@ Paid subscription expired, redirect user if trying to access paid content
     from permissionsx.models import P
     from permissionsx.models import Permissions
 
-    from newspaper.profiles.models import AnonymousProfile
     from newspaper.content.views import SubscriptionExpiredRedirectView
 
 
-    class ProfilePermissions(Permissions):
-
-        def set_request_objects(self, request, **kwargs):
-            if request.user.is_anonymous():
-                request.user.get_profile = lambda: AnonymousProfile()
-
-
-    class SubscriberPermissions(ProfilePermissions):
+    class SubscriberPermissions(Permissions):
 
         permissions = P(user__is_authenticated=True) & P(
             user__get_profile__is_subscriber=True, if_false=SubscriptionExpiredRedirectView.as_view()

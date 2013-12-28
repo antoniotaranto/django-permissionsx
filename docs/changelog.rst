@@ -2,6 +2,47 @@
 Changelog
 =========
 
+1.2.0
+=====
+
+* Removed `set_request_context()` method from :class:`Permissions`. This was adding unjustified complexity. Instead, inheritance and `super()` calls can be used.
+* Added new operator: `Cmp()`. This allows to compare permission rules to request object even if they are not currently available in the method scope. Also, this prevents exceptions from non-existing relations (e.g. `request.user.company` while `company` can be null).
+* Simplification. Removed dependency on Django patches or middleware tricks. Now if a user is anonymous and permissions are checked, and they fail on specific attributes of the `User` instance (e.g. `get_profile()`), user will be denied access for that specific rule by default.
+* Updated Django Debug Toolbar integration.
+* Added support for passing permission rules to classes having permissions already defined. This will cause all rules to be merged using AND (&). For example, following is now possible:
+
+
+:file:`accounts/permissions.py`
+
+.. code-block:: python
+
+    class ContentEditablePermissions(Permissions):
+
+        def get_permissions(self, request, **kwargs):
+            request.content = Content.objects.get(slug=kwargs.get('slug'))
+            return P(user__is_author_of=Arg('content')) | P(content__publisher=Cmp('user.publisher'))
+
+
+:file:`content/views.py`
+
+.. code-block:: python
+
+    class ContentUpdateView(DjangoViewMixin, UpdateView):
+
+        model = Content
+        template_name = 'content/content_edit.html'
+        form_class = ContentCreateUpdateForm
+        permissions_class = ContentEditablePermissions(
+            P(content__can_change_price=True)
+        )
+
+So the final result would be:
+
+.. code-block:: python
+
+    request.content.can_change_price() & (request.user.is_author_of(request.content) | (request.content.publisher == request.user.publisher))
+
+
 1.1.4
 =====
 
