@@ -30,8 +30,11 @@ class Permissions(object):
     permissions = None
 
     def __init__(self, *args, **kwargs):
-        if self.permissions is None and args:
-            self.permissions = args[0]
+        if args:
+            if self.permissions is None:
+                self.permissions = args[0]
+            else:
+                self.permissions = self.permissions & args[0]
 
     def permissions_evaluate(self, request, expression, argument=None):
         words = expression.split('__')
@@ -105,8 +108,14 @@ class Permissions(object):
         """
         return self.permissions
 
-    def check_permissions(self, request=None, *args, **kwargs):
+    def get_combined_permissions(self, request, **kwargs):
         permissions = self.get_permissions(request, **kwargs)
+        if self.permissions is not None:
+            permissions = self.permissions & permissions
+        return permissions
+
+    def check_permissions(self, request=None, *args, **kwargs):
+        permissions = self.get_combined_permissions(request, **kwargs)
         if permissions:
             setattr(request, 'permissionsx_return_overrides', [])
             return self.permissions_traversal(request, permissions)
