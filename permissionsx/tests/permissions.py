@@ -7,7 +7,6 @@ PermissionsX - Authorization for Django.
 """
 from permissionsx.models import P
 from permissionsx.models import Permissions
-from permissionsx.tests.models import AnonymousProfile
 
 
 user_is_authenticated = P(user__is_authenticated=True)
@@ -49,19 +48,12 @@ class AndStaffSuperuserPermissions(Permissions):
     permissions = user_is_staff & user_is_superuser
 
 
-class ProfilePermissions(Permissions):
-
-    def set_request_objects(self, request, **kwargs):
-        if request.user.is_anonymous():
-            request.user.get_profile = lambda: AnonymousProfile()
-
-
-class NegatePermissions(ProfilePermissions):
+class NegatePermissions(Permissions):
 
     permissions = ~P(user__get_profile__is_public=False) & ~P(user__is_authenticated=False)
 
 
-class IsPublicPermissions(ProfilePermissions):
+class IsPublicPermissions(Permissions):
 
     permissions = P(user__get_profile__is_public=True)
 
