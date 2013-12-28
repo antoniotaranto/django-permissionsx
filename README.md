@@ -23,7 +23,7 @@
 
         class ManagerPermissions(Permissions):
 
-            permissions = P(user__is_staff=True) & P(user__is_manager=True)
+            permissions = P(user__is_staff=True) & P(user__get_profile__is_manager=True)
 
 
 ### 3. Add permissions to your views, e.g.:
