@@ -2,6 +2,11 @@
 Changelog
 =========
 
+1.2.1
+=====
+
+* Bugfix release. Merging permissions with a :class:`Permissions` instance with no rules defined was raising `TypeError` exception.
+
 1.2.0
 =====
 
@@ -41,7 +46,6 @@ So the final result would be:
 .. code-block:: python
 
     request.content.can_change_price() & (request.user.is_author_of(request.content) | (request.content.publisher == request.user.publisher))
-
 
 1.1.4
 =====
