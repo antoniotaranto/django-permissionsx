@@ -8,11 +8,13 @@ PermissionsX - Authorization for Django.
 from django.core.urlresolvers import reverse
 from django.contrib.auth import login
 
-from permissionsx.tests.test_utils import UtilityTestCase
-from permissionsx.tests.test_utils import SettingsOverride
+from permissionsx.contrib.django import DjangoViewMixin
 from permissionsx.models import Arg
-from permissionsx.tests.permissions import *
 from permissionsx.tests.models import TestObject
+from permissionsx.tests.permissions import *
+from permissionsx.tests.test_utils import SettingsOverride
+from permissionsx.tests.test_utils import UtilityTestCase
+from permissionsx.tests.views import BaseGetView
 
 
 class PermissionsDefinitionsTests(UtilityTestCase):
@@ -253,3 +255,55 @@ class PermissionsDjangoViews(UtilityTestCase):
         self.login(self.client, 'staff')
         response = self.client.get(reverse('menu'), follow=True)
         self.assertContains(response, 'Staff Menu')
+
+    def test_combining_permissions(self):
+
+        class SomeBasicObjectPermissions(Permissions):
+
+            permissions = P(some_object1__title='Some Object 1')
+
+            def get_permissions(self, request, **kwargs):
+                request.some_object1 = TestObject(title='Some Object 1')
+                request.some_object2 = TestObject(title='Some Object 2')
+                request.some_object3 = TestObject(title='Some Object 3')
+                return P(some_object2__title='Some Object 2')
+
+        class SomeObjectPermissions(SomeBasicObjectPermissions):
+
+            def get_permissions(self, request, **kwargs):
+                permissions = super(SomeObjectPermissions, self).get_permissions(request, **kwargs)
+                request.some_object4 = TestObject(title='Some Object 4')
+                return permissions & P(some_object3__title='Some Object 3')
+
+        class TestView(DjangoViewMixin, BaseGetView):
+
+            permissions_class = SomeObjectPermissions(
+                P(some_object4__title='Some Object 4')
+            )
+
+        request = self.factory.get('/')
+        combined_permissions = TestView.permissions_class.get_combined_permissions(request)
+        self.assertEqual(
+            str(combined_permissions),
+            '(&{\'some_object1__title\': \'Some Object 1\'},{\'some_object4__title\': \'Some Object 4\'},{\'some_object2__title\': \'Some Object 2\'},{\'some_object3__title\': \'Some Object 3\'})'
+        )
+
+    def test_combining_permissions_with_none(self):
+
+        class SomeObjectPermissions(Permissions):
+
+            # NOTE: Inherits `permissions_class == None` from Permissions.
+            def get_permissions(self, request, **kwargs):
+                request.some_object = TestObject(title='Some Object')
+
+        class TestView(DjangoViewMixin, BaseGetView):
+
+            permissions_class = SomeObjectPermissions(
+                P(user_is_staff | user_is_superuser)
+            )
+
+        request = self.factory.get('/')
+        response = TestView().dispatch(request)
+        self.assertEqual(response.status_code, 200) #pylint: disable-msg=E1103
+        self.assertEqual(request.some_object.title, 'Some Object') #pylint: disable-msg=E1103
+

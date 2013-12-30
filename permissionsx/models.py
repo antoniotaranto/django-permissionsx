@@ -110,7 +110,7 @@ class Permissions(object):
 
     def get_combined_permissions(self, request, **kwargs):
         permissions = self.get_permissions(request, **kwargs)
-        if self.permissions is not None:
+        if self.permissions is not None and permissions is not None:
             permissions = self.permissions & permissions
         return permissions
 

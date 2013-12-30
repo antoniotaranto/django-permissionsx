@@ -7,8 +7,10 @@ PermissionsX - Authorization for Django.
 """
 from django.views.generic import (
     TemplateView,
-    )
+    View,
+)
 from django.contrib import messages
+from django.http import HttpResponse
 
 from permissionsx.models import Permissions
 from permissionsx.models import P
@@ -19,6 +21,12 @@ from permissionsx.tests.permissions import (
     OrStaffSuperuserPermissions,
     SuperuserPermissions,
 )
+
+
+class BaseGetView(View):
+
+    def get(self, request, *args, **kwargs):
+        return HttpResponse(str(args) + str(kwargs))
 
 
 class LoginView(TemplateView):
