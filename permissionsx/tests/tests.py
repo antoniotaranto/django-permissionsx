@@ -292,7 +292,7 @@ class PermissionsDjangoViews(UtilityTestCase):
 
         class SomeObjectPermissions(Permissions):
 
-            # NOTE: Inherits `permissions_class == None` from Permissions.
+            # NOTE: Inherits `permissions == None` from Permissions.
             def get_permissions(self, request, **kwargs):
                 request.some_object = TestObject(title='Some Object')
 
