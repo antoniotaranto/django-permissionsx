@@ -24,7 +24,7 @@ You will find that defining permissions is similar to filtering QuerySets and `c
 
 means that the user will be granted access if is logged in **and** is either a staff member, **or** a superuser.
 
-Currently :mod:`django-permissionsx` can be used with Django class-based views, templates and `django-tastypie <https://github.com/toastdriven/django-tastypie/>`_ authorization.
+The goal of this project is to make authorization related code as much reusable and consistent as possible. Therefore, permissions can be easily used for multiple views, inherited, used in templates or for building mobile API using `django-tastypie <https://github.com/toastdriven/django-tastypie/>`_.
 
 Contents
 ========
