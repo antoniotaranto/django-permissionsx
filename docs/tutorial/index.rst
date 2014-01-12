@@ -444,7 +444,10 @@ Setting request objects
     class ArticlePermissions(ProfilePermissions):
 
         def get_permissions(self, request, **kwargs):
-            request.article = Article.objects.get(slug=kwargs.get('slug'))
+            try:
+                request.article = Article.objects.get(slug=kwargs.get('slug'))
+            except Article.DoesNotExist:
+                request.article = None
 
 
 Using permissions in templates

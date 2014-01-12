@@ -24,7 +24,10 @@ Changelog
     class ContentEditablePermissions(Permissions):
 
         def get_permissions(self, request, **kwargs):
-            request.content = Content.objects.get(slug=kwargs.get('slug'))
+            try:
+                request.content = Content.objects.get(slug=kwargs.get('slug'))
+            except Content.DoesNotExist:
+                request.content = None
             return P(user__is_author_of=Arg('content')) | P(content__publisher=Cmp('user.publisher'))
 
 
