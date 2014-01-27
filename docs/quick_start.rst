@@ -47,11 +47,7 @@ Quick Start
         class ManagerListView(PermissionsListView):
 
             queryset = Item.objects.all()
-<<<<<<< HEAD
-            permissions = ManagerPermissions
-=======
             permissions = ManagerPermissions()
->>>>>>> Documentation fixes.
 
 
 4. Don't forget to add :mod:`permissionsx` to your :attr:`INSTALLED_APPS`:
