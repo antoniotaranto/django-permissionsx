@@ -5,48 +5,50 @@ PermissionsX - Authorization for Django.
 :license:   BSD, see LICENSE for more details.
 
 """
+from __future__ import absolute_import
+
 from django.core.urlresolvers import reverse
 from django.contrib.auth import login
 
-from permissionsx.contrib.django import DjangoViewMixin
+from permissionsx.contrib.django.views import DjangoViewMixin
 from permissionsx.models import Arg
 from permissionsx.tests.models import TestObject
 from permissionsx.tests.permissions import *
 from permissionsx.tests.test_utils import SettingsOverride
 from permissionsx.tests.test_utils import UtilityTestCase
-from permissionsx.tests.views import BaseGetView
+from permissionsx.tests.views import SimpleGetView
 
 
 class PermissionsDefinitionsTests(UtilityTestCase):
 
     def test_is_authenticated(self):
         request = self.get_request_for_user(self.user)
-        self.assertFalse(self.permissions_for_request(AuthenticatedPermissions, request))
+        self.assertFalse(AuthenticatedPermissions().check(request))
         login(request, self.user)
-        self.assertTrue(self.permissions_for_request(AuthenticatedPermissions, request))
+        self.assertTrue(AuthenticatedPermissions().check(request))
 
     def test_is_superuser(self):
         request = self.get_request_for_user(self.admin)
-        self.assertFalse(self.permissions_for_request(AuthenticatedPermissions, request))
+        self.assertFalse(AuthenticatedPermissions().check(request))
         login(request, self.admin)
-        self.assertTrue(self.permissions_for_request(AuthenticatedPermissions, request))
-        self.assertTrue(self.permissions_for_request(SuperuserPermissions, request))
+        self.assertTrue(AuthenticatedPermissions().check(request))
+        self.assertTrue(SuperuserPermissions().check(request))
 
     def test_is_staff(self):
         request_staff = self.get_request_for_user(self.staff)
         request_admin = self.get_request_for_user(self.admin)
         login(request_staff, self.staff)
         login(request_admin, self.admin)
-        self.assertTrue(self.permissions_for_request(StaffPermissions, request_staff))
-        self.assertFalse(self.permissions_for_request(StaffPermissions, request_admin))
+        self.assertTrue(StaffPermissions().check(request_staff))
+        self.assertFalse(StaffPermissions().check(request_admin))
 
     def test_staff_or_superuser(self):
         request_staff = self.get_request_for_user(self.staff)
         request_admin = self.get_request_for_user(self.admin)
         login(request_staff, self.staff)
         login(request_admin, self.admin)
-        self.assertTrue(self.permissions_for_request(OrStaffSuperuserPermissions, request_staff))
-        self.assertTrue(self.permissions_for_request(OrStaffSuperuserPermissions, request_admin))
+        self.assertTrue(OrStaffSuperuserPermissions().check(request_staff))
+        self.assertTrue(OrStaffSuperuserPermissions().check(request_admin))
 
     def test_staff_and_superuser(self):
         request_staff = self.get_request_for_user(self.staff)
@@ -55,91 +57,91 @@ class PermissionsDefinitionsTests(UtilityTestCase):
         login(request_staff, self.staff)
         login(request_admin, self.admin)
         login(request_user, self.user)
-        self.assertFalse(self.permissions_for_request(AndStaffSuperuserPermissions, request_staff))
-        self.assertFalse(self.permissions_for_request(AndStaffSuperuserPermissions, request_admin))
-        self.assertFalse(self.permissions_for_request(AndStaffSuperuserPermissions, request_user))
+        self.assertFalse(AndStaffSuperuserPermissions().check(request_staff))
+        self.assertFalse(AndStaffSuperuserPermissions().check(request_admin))
+        self.assertFalse(AndStaffSuperuserPermissions().check(request_user))
         self.staff.is_superuser = True
         self.admin.is_staff = True
-        self.assertTrue(self.permissions_for_request(AndStaffSuperuserPermissions, request_staff))
-        self.assertTrue(self.permissions_for_request(AndStaffSuperuserPermissions, request_admin))
-        self.assertFalse(self.permissions_for_request(AndStaffSuperuserPermissions, request_user))
+        self.assertTrue(AndStaffSuperuserPermissions().check(request_staff))
+        self.assertTrue(AndStaffSuperuserPermissions().check(request_admin))
+        self.assertFalse(AndStaffSuperuserPermissions().check(request_user))
 
     def test_request_objects(self):
         request_user = self.get_request_for_user(self.user)
         request_admin = self.get_request_for_user(self.admin)
         login(request_user, self.user)
-        self.assertFalse(self.permissions_for_request(IsPublicPermissions, request_user))
-        self.assertFalse(self.permissions_for_request(IsPublicPermissions, request_admin))
-        self.assertFalse(self.permissions_for_request(AuthenticatedPermissions, request_admin))
+        self.assertFalse(IsPublicPermissions().check(request_user))
+        self.assertFalse(IsPublicPermissions().check(request_admin))
+        self.assertFalse(AuthenticatedPermissions().check(request_admin))
         self.user.get_profile().is_public = True
-        self.assertTrue(self.permissions_for_request(IsPublicPermissions, request_user))
-        self.assertFalse(self.permissions_for_request(IsPublicPermissions, request_admin))
+        self.assertTrue(IsPublicPermissions().check(request_user))
+        self.assertFalse(IsPublicPermissions().check(request_admin))
 
     def test_negation_request_objects(self):
         request_user = self.get_request_for_user(self.user)
         request_admin = self.get_request_for_user(self.admin)
         login(request_user, self.user)
         login(request_admin, self.admin)
-        self.assertTrue(self.permissions_for_request(AuthenticatedPermissions, request_user))
-        self.assertTrue(self.permissions_for_request(AuthenticatedPermissions, request_admin))
-        self.assertFalse(self.permissions_for_request(NegatePermissions, request_user))
-        self.assertFalse(self.permissions_for_request(NegatePermissions, request_admin))
+        self.assertTrue(AuthenticatedPermissions().check(request_user))
+        self.assertTrue(AuthenticatedPermissions().check(request_admin))
+        self.assertFalse(NegatePermissions().check(request_user))
+        self.assertFalse(NegatePermissions().check(request_admin))
         self.user.get_profile().is_public = True
         self.admin.get_profile().is_public = True
-        self.assertTrue(self.permissions_for_request(NegatePermissions, request_user))
-        self.assertTrue(self.permissions_for_request(NegatePermissions, request_admin))
+        self.assertTrue(NegatePermissions().check(request_user))
+        self.assertTrue(NegatePermissions().check(request_admin))
 
     def test_nested_permissions(self):
         request_admin = self.get_request_for_user(self.admin)
-        self.assertFalse(self.permissions_for_request(NestedPermissions, request_admin))
+        self.assertFalse(NestedPermissions().check(request_admin))
         login(request_admin, self.admin)
-        self.assertFalse(self.permissions_for_request(NestedPermissions, request_admin))
+        self.assertFalse(NestedPermissions().check(request_admin))
         self.admin.username = 'admin2'
-        self.assertFalse(self.permissions_for_request(NestedPermissions, request_admin))
+        self.assertFalse(NestedPermissions().check(request_admin))
         self.admin.is_staff = True
-        self.assertTrue(self.permissions_for_request(NestedPermissions, request_admin))
+        self.assertTrue(NestedPermissions().check(request_admin))
 
     def test_request_params(self):
         request_admin = self.get_request_for_user(self.admin)
-        self.assertFalse(self.permissions_for_request(RequestParamPermissions, request_admin))
+        self.assertFalse(RequestParamPermissions().check(request_admin))
         login(request_admin, self.admin)
-        self.assertTrue(self.permissions_for_request(RequestParamPermissions, request_admin))
+        self.assertTrue(RequestParamPermissions().check(request_admin))
 
     def test_overrides(self):
         request_admin = self.get_request_for_user(self.admin)
-        self.permissions_for_request(OverrideIfFalsePermissions, request_admin)
+        OverrideIfFalsePermissions().check(request_admin)
         self.assertEqual(OVERRIDE_FALSE, request_admin.permissionsx_return_overrides[0]())
-        self.permissions_for_request(OverrideIfTrueFalsePermissions, request_admin)
+        OverrideIfTrueFalsePermissions().check(request_admin)
         self.assertEqual(OVERRIDE_FALSE, request_admin.permissionsx_return_overrides[0]())
-        self.permissions_for_request(NegatedOverrideIfTrueFalsePermissions, request_admin)
+        NegatedOverrideIfTrueFalsePermissions().check(request_admin)
         self.assertEqual(OVERRIDE_FALSE, request_admin.permissionsx_return_overrides[0]())
-        self.permissions_for_request(NestedNegatedOverridePermissions, request_admin)
+        NestedNegatedOverridePermissions().check(request_admin)
         self.assertEqual(OVERRIDE_FALSE, request_admin.permissionsx_return_overrides[0]())
         login(request_admin, self.admin)
-        self.permissions_for_request(OverrideIfTruePermissions, request_admin)
+        OverrideIfTruePermissions().check(request_admin)
         self.assertEqual(OVERRIDE_TRUE, request_admin.permissionsx_return_overrides[0]())
-        self.permissions_for_request(OverrideIfTrueFalsePermissions, request_admin)
+        OverrideIfTrueFalsePermissions().check(request_admin)
         self.assertEqual(OVERRIDE_TRUE, request_admin.permissionsx_return_overrides[0]())
-        self.permissions_for_request(NegatedOverrideIfTrueFalsePermissions, request_admin)
+        NegatedOverrideIfTrueFalsePermissions().check(request_admin)
         self.assertEqual(OVERRIDE_TRUE, request_admin.permissionsx_return_overrides[0]())
-        self.permissions_for_request(NestedNegatedOverridePermissions, request_admin)
+        NestedNegatedOverridePermissions().check(request_admin)
         self.assertEqual(OVERRIDE_TRUE, request_admin.permissionsx_return_overrides[0]())
 
     def test_oneliners(self):
         request = self.get_request_for_user(self.user)
-        self.assertFalse(self.permissions_for_request(Permissions(P(user__is_authenticated=True) & P(user__username=request.user.username)), request))
+        self.assertFalse(Permissions(P(user__is_authenticated=True) & P(user__username=request.user.username)).check(request))
         login(request, self.user)
-        self.assertTrue(self.permissions_for_request(Permissions(P(user__is_authenticated=True) | P(user__username='someotheruser')), request))
-        self.permissions_for_request(Permissions(user_is_authenticated & P(user__is_superuser=True, if_false=if_true_override)), request)
+        self.assertTrue(Permissions(P(user__is_authenticated=True) | P(user__username='someotheruser')).check(request))
+        Permissions(user_is_authenticated & P(user__is_superuser=True, if_false=if_true_override)).check(request)
         self.assertEqual(OVERRIDE_TRUE, request.permissionsx_return_overrides[0]())
-        self.permissions_for_request(Permissions(user_is_superuser | P(user__is_staff=True, if_false=if_false_override)), request)
+        Permissions(user_is_superuser | P(user__is_staff=True, if_false=if_false_override)).check(request)
         self.assertEqual(OVERRIDE_FALSE, request.permissionsx_return_overrides[0]())
         permissions_tested = Permissions(
             P(user__is_authenticated=True) &
             P(user__is_staff=True, if_false=if_false_override) &
             P(user__is_superuser=False)
         )
-        self.permissions_for_request(permissions_tested, request)
+        permissions_tested.check(request)
         self.assertEqual(OVERRIDE_FALSE, request.permissionsx_return_overrides[0]())
         login(request, self.staff)
         permissions_tested = Permissions(
@@ -147,21 +149,21 @@ class PermissionsDefinitionsTests(UtilityTestCase):
             P(user__is_staff=True, if_true=if_true_override) &
             P(user__is_superuser=False)
         )
-        self.permissions_for_request(permissions_tested, request)
+        permissions_tested.check(request)
         self.assertEqual(OVERRIDE_TRUE, request.permissionsx_return_overrides[0]())
 
     def test_request_arguments(self):
         request = self.get_request_for_user(self.user)
         setattr(request, 'user2', self.admin)
         login(request, self.user)
-        self.assertTrue(self.permissions_for_request(Permissions(P(user__get_profile__is_attached_to_user=Arg('user'))), request))
-        self.assertFalse(self.permissions_for_request(Permissions(P(user__get_profile__is_attached_to_user=Arg('user2'))), request))
+        self.assertTrue(Permissions(P(user__get_profile__is_attached_to_user=Arg('user'))).check(request))
+        self.assertFalse(Permissions(P(user__get_profile__is_attached_to_user=Arg('user2'))).check(request))
 
     def test_nested_negated(self):
         request_admin = self.get_request_for_user(self.admin)
-        self.assertFalse(self.permissions_for_request(NestedNegatedPermissions, request_admin))
+        self.assertFalse(NestedNegatedPermissions().check(request_admin))
         login(request_admin, self.admin)
-        self.assertTrue(self.permissions_for_request(NestedNegatedPermissions, request_admin))
+        self.assertTrue(NestedNegatedPermissions().check(request_admin))
 
     def test_children(self):
         self.assertEqual(
@@ -260,9 +262,9 @@ class PermissionsDjangoViews(UtilityTestCase):
 
         class SomeBasicObjectPermissions(Permissions):
 
-            permissions = P(some_object1__title='Some Object 1')
+            rules = P(some_object1__title='Some Object 1')
 
-            def get_permissions(self, request, **kwargs):
+            def get_rules(self, request, **kwargs):
                 request.some_object1 = TestObject(title='Some Object 1')
                 request.some_object2 = TestObject(title='Some Object 2')
                 request.some_object3 = TestObject(title='Some Object 3')
@@ -270,21 +272,21 @@ class PermissionsDjangoViews(UtilityTestCase):
 
         class SomeObjectPermissions(SomeBasicObjectPermissions):
 
-            def get_permissions(self, request, **kwargs):
-                permissions = super(SomeObjectPermissions, self).get_permissions(request, **kwargs)
+            def get_rules(self, request, **kwargs):
+                rules = super(SomeObjectPermissions, self).get_rules(request, **kwargs)
                 request.some_object4 = TestObject(title='Some Object 4')
-                return permissions & P(some_object3__title='Some Object 3')
+                return rules & P(some_object3__title='Some Object 3')
 
-        class TestView(DjangoViewMixin, BaseGetView):
+        class TestView(DjangoViewMixin, SimpleGetView):
 
-            permissions_class = SomeObjectPermissions(
+            permissions = SomeObjectPermissions(
                 P(some_object4__title='Some Object 4')
             )
 
         request = self.factory.get('/')
-        combined_permissions = TestView.permissions_class.get_combined_permissions(request)
+        combined_rules = TestView.permissions.get_combined_rules(request)
         self.assertEqual(
-            str(combined_permissions),
+            str(combined_rules),
             '(&{\'some_object1__title\': \'Some Object 1\'},{\'some_object4__title\': \'Some Object 4\'},{\'some_object2__title\': \'Some Object 2\'},{\'some_object3__title\': \'Some Object 3\'})'
         )
 
@@ -293,12 +295,12 @@ class PermissionsDjangoViews(UtilityTestCase):
         class SomeObjectPermissions(Permissions):
 
             # NOTE: Inherits `permissions == None` from Permissions.
-            def get_permissions(self, request, **kwargs):
+            def get_rules(self, request, **kwargs):
                 request.some_object = TestObject(title='Some Object')
 
-        class TestView(DjangoViewMixin, BaseGetView):
+        class TestView(DjangoViewMixin, SimpleGetView):
 
-            permissions_class = SomeObjectPermissions(
+            permissions = SomeObjectPermissions(
                 P(user_is_staff | user_is_superuser)
             )
 

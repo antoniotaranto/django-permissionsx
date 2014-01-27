@@ -5,6 +5,8 @@ PermissionsX - Authorization for Django.
 :license:   BSD, see LICENSE for more details.
 
 """
+from __future__ import absolute_import
+
 from setuptools import setup
 from setuptools import find_packages
 

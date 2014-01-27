@@ -5,6 +5,8 @@ PermissionsX - Authorization for Django.
 :license:   BSD, see LICENSE for more details.
 
 """
+from __future__ import absolute_import
+
 from django.contrib.auth.models import User
 from django.test import (
     TestCase,
@@ -53,12 +55,6 @@ class UtilityTestCase(TestCase):
         self.session_middleware.process_request(request)
         logout(request)
         return request
-
-    def permissions_for_request(self, permissions, request):
-        if isinstance(permissions, Permissions):
-            return permissions.check_permissions(request)
-        else:
-            return permissions().check_permissions(request)
 
 
 # NOTE: SettingsOverride comes from `https://github.com/divio/django-cms/`.

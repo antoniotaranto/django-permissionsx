@@ -4,12 +4,14 @@ Welcome to django-permissionsx's documentation!
 
 * Version:
     - |version|
-* Python Package:
+* Python package:
     - `<http://pypi.python.org/pypi/django-permissionsx/>`_
 * Source code:
     - `<http://github.com/thinkingpotato/django-permissionsx/>`_
 * Bug tracker:
     - `<http://github.com/thinkingpotato/django-permissionsx/issues/>`_
+* Example project:
+    - `<http://github.com/thinkingpotato/django-permissionsx-example/>`_
 
 Introduction
 ============
