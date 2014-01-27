@@ -21,7 +21,7 @@ Quick Start
 
         class ManagerPermissions(Permissions):
 
-            permissions = P(user__is_staff=True) & P(user__get_profile__is_manager=True)
+            rules = P(user__is_staff=True) & P(user__get_profile__is_manager=True)
 
 
 3. Add permissions to your views, e.g.:
@@ -47,7 +47,11 @@ Quick Start
         class ManagerListView(PermissionsListView):
 
             queryset = Item.objects.all()
+<<<<<<< HEAD
             permissions = ManagerPermissions
+=======
+            permissions = ManagerPermissions()
+>>>>>>> Documentation fixes.
 
 
 4. Don't forget to add :mod:`permissionsx` to your :attr:`INSTALLED_APPS`:

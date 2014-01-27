@@ -4,8 +4,15 @@ Tutorial
 
 .. contents:: Table of Contents
 
-Overview
-========
+
+Example
+=======
+
+Please visit `<http://github.com/thinkingpotato/django-permissionsx-example/>`_ for a full working example of a Django project utilizing class-based views permissions checking and Tastypie integration.
+
+
+Deeper look
+===========
 
 P
 -
@@ -31,8 +38,6 @@ It is useful in situations where user needs to be redirected to different URLs w
 * is not authenticated, redirect to login view by default;
 * is authenticated, but has insufficient permissions (e.g. needs to upgrade account), redirect to a view with payment options and show message using :mod:`django.contrib.messages`;
 * is authenticated and has sufficient permissions, let in.
-
-Have a look at `Response with action overridden on a P() level`_ on how overrides can be used.
 
 Arg
 ---
@@ -83,7 +88,7 @@ Permissions
             rules = P(user__is_authenticated=True)
 
 
-        class ArticleDetailView(DjangoViewMixin, DetailView):
+        class ArticleDetailView(PermissionsDetailView):
 
             model = Article
             permissions = UserPermissions()
@@ -98,7 +103,7 @@ Or the same just without subclassing :class:`Permissions`:
 
 .. code-block:: python
 
-        class ArticleDetailView(DjangoViewMixin, DetailView):
+        class ArticleDetailView(PermissionsDetailView):
 
             model = Article
             permissions = Permissions(P(user__is_authenticated=True))
@@ -112,7 +117,7 @@ And yet another example, this time by reusing single definition:
         is_authenticated = P(user__is_authenticated=True)
 
 
-        class ArticleDetailView(DjangoViewMixin, DetailView):
+        class ArticleDetailView(PermissionsDetailView):
 
             model = Article
             permissions = Permissions(is_authenticated)
@@ -121,6 +126,7 @@ And yet another example, this time by reusing single definition:
 Attributes:
 
 * :attr:`permissions` - required.
+<<<<<<< HEAD
 
 
 Django
@@ -163,3 +169,5 @@ Example
 =======
 
 Please visit `<http://github.com/thinkingpotato/django-permissionsx-example/>`_ for a full working example of a Django project utilizing class-based views permissions checking and Tastypie integration.
+=======
+>>>>>>> Documentation fixes.
