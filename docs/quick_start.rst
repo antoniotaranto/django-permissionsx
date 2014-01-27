@@ -31,23 +31,23 @@ Quick Start
 
         from django.views.generic import ListView
 
-        from permissionsx.contrib.django import DjangoViewMixin
+        from permissionsx.contrib.django.views import PermissionsListView
 
-        from newspaper.profiles.permissions import ManagerPermissions
+        from example.profiles.permissions import ManagerPermissions
 
 
-        class AuthenticatedListView(DjangoViewMixin, ListView):
+        class AuthenticatedListView(PermissionsListView):
 
             queryset = Item.objects.all()
-            permissions_class = Permissions(
+            permissions = Permissions(
                 P(user__is_authenticated=True)
             )
 
 
-        class ManagerListView(DjangoViewMixin, ListView):
+        class ManagerListView(PermissionsListView):
 
             queryset = Item.objects.all()
-            permissions_class = ManagerPermissions
+            permissions = ManagerPermissions
 
 
 4. Don't forget to add :mod:`permissionsx` to your :attr:`INSTALLED_APPS`:
@@ -68,7 +68,7 @@ Quick Start
 .. code-block:: python
 
         {% load permissionsx_tags %}
-        {% permissions 'newspaper.profiles.permissions.ManagerPermissions' as user_is_manager %}
+        {% permissions 'example.profiles.permissions.ManagerPermissions' as user_is_manager %}
 
         <ul id="utility-navigation">
             {% if user_is_manager %}

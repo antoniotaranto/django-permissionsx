@@ -16,7 +16,7 @@ from debug_toolbar.utils import get_name_from_obj
 from permissionsx.utils import get_class
 
 
-class PermissionsDebugPanel(DebugPanel):
+class PermissionsPanel(DebugPanel):
     """A django-debug-toolbar panel useful for setting up permissions."""
 
     name = 'PermissionsX'
@@ -50,9 +50,8 @@ class PermissionsDebugPanel(DebugPanel):
         try:
             view_info['view_name'] = get_name_from_obj(view)
             try:
-                permissions = view.permissions_class() if callable(view.permissions_class) else view.permissions_class
-                view_info['view_permissions'] = get_name_from_obj(view.permissions_class)
-                view_info['view_rules'] = str(permissions.get_combined_permissions(request, *view_args, **view_kwargs))
+                view_info['view_permissions'] = get_name_from_obj(view.permissions)
+                view_info['view_rules'] = str(view.permissions.get_combined_rules(request, *view_args, **view_kwargs))
             except AttributeError:
                 # NOTE: No permissions defined for this view.
                 pass

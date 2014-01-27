@@ -5,6 +5,8 @@ PermissionsX - Authorization for Django.
 :license:   BSD, see LICENSE for more details.
 
 """
+from __future__ import absolute_import
+
 from permissionsx.models import P
 from permissionsx.models import Permissions
 
@@ -25,75 +27,75 @@ if_false_override = lambda: if_override(OVERRIDE_FALSE)
 
 class AuthenticatedPermissions(Permissions):
 
-    permissions = P(user__is_authenticated=True)
+    rules = P(user__is_authenticated=True)
 
 
 class SuperuserPermissions(Permissions):
 
-    permissions = user_is_superuser
+    rules = user_is_superuser
 
 
 class StaffPermissions(Permissions):
 
-    permissions = user_is_staff
+    rules = user_is_staff
 
 
 class OrStaffSuperuserPermissions(Permissions):
 
-    permissions = user_is_staff | user_is_superuser
+    rules = user_is_staff | user_is_superuser
 
 
 class AndStaffSuperuserPermissions(Permissions):
 
-    permissions = user_is_staff & user_is_superuser
+    rules = user_is_staff & user_is_superuser
 
 
 class NegatePermissions(Permissions):
 
-    permissions = ~P(user__get_profile__is_public=False) & ~P(user__is_authenticated=False)
+    rules = ~P(user__get_profile__is_public=False) & ~P(user__is_authenticated=False)
 
 
 class IsPublicPermissions(Permissions):
 
-    permissions = P(user__get_profile__is_public=True)
+    rules = P(user__get_profile__is_public=True)
 
 
 class NestedPermissions(Permissions):
 
-    permissions = P(P(user__is_authenticated=True) & P(P(user__is_staff=True) & P(P(user__is_superuser=True) & P(user__username='admin2'))))
+    rules = P(P(user__is_authenticated=True) & P(P(user__is_staff=True) & P(P(user__is_superuser=True) & P(user__username='admin2'))))
 
 
 class RequestParamPermissions(Permissions):
 
-    def get_permissions(self, request=None):
+    def get_rules(self, request=None):
         return ~P(user__is_authenticated=False) & P(user__username=request.user.username)
 
 
 class OverrideIfFalsePermissions(Permissions):
 
-    permissions = P(user__is_authenticated=True, if_false=if_false_override)
+    rules = P(user__is_authenticated=True, if_false=if_false_override)
 
 
 class OverrideIfTruePermissions(Permissions):
 
-    permissions = P(user__is_authenticated=True, if_true=if_true_override)
+    rules = P(user__is_authenticated=True, if_true=if_true_override)
 
 
 class OverrideIfTrueFalsePermissions(Permissions):
 
-    permissions = P(user__is_authenticated=True, if_true=if_true_override, if_false=if_false_override)
+    rules = P(user__is_authenticated=True, if_true=if_true_override, if_false=if_false_override)
 
 
 class NegatedOverrideIfTrueFalsePermissions(Permissions):
 
-    permissions = ~P(user__is_authenticated=True, if_true=if_true_override, if_false=if_false_override)
+    rules = ~P(user__is_authenticated=True, if_true=if_true_override, if_false=if_false_override)
 
 
 class NestedNegatedOverridePermissions(Permissions):
 
-    permissions = P(P(user__is_authenticated=False) & ~P(user__is_authenticated=True, if_true=if_true_override, if_false=if_false_override))
+    rules = P(P(user__is_authenticated=False) & ~P(user__is_authenticated=True, if_true=if_true_override, if_false=if_false_override))
 
 
 class NestedNegatedPermissions(Permissions):
 
-    permissions = P(~P(user__is_authenticated=False) & P(P(user__is_authenticated=True) | ~P(user__is_authenticated=False)))
+    rules = P(~P(user__is_authenticated=False) & P(P(user__is_authenticated=True) | ~P(user__is_authenticated=False)))

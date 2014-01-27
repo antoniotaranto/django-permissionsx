@@ -2,6 +2,19 @@
 Changelog
 =========
 
+1.3.0
+=====
+
+* On a view level `permissions_class` is now `permissions`.
+* Renamed `get_permissions` to `get_rules`.
+* Renamed `permissions` to `rules`.
+* Renamed `check_permissions` to `check`.
+* Other internal API changes.
+* Object passed to `permissions` must be an instance.
+* Added example project at `<http://github.com/thinkingpotato/django-permissionsx-example>`_.
+* Removed `PERMISSIONSX_DEBUG` setting.
+* Renamed `PermissionsDebugPanel` to `PermissionsPanel` (following django-debug-toolbar).
+
 1.2.1
 =====
 

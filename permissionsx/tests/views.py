@@ -5,6 +5,8 @@ PermissionsX - Authorization for Django.
 :license:   BSD, see LICENSE for more details.
 
 """
+from __future__ import absolute_import
+
 from django.views.generic import (
     TemplateView,
     View,
@@ -14,8 +16,10 @@ from django.http import HttpResponse
 
 from permissionsx.models import Permissions
 from permissionsx.models import P
-from permissionsx.contrib.django import DjangoViewMixin
-from permissionsx.contrib.django import MessageRedirectView
+from permissionsx.contrib.django.views import (
+    PermissionsTemplateView,
+    MessageRedirectView,
+)
 from permissionsx.tests.permissions import (
     AuthenticatedPermissions,
     OrStaffSuperuserPermissions,
@@ -23,7 +27,7 @@ from permissionsx.tests.permissions import (
 )
 
 
-class BaseGetView(View):
+class SimpleGetView(View):
 
     def get(self, request, *args, **kwargs):
         return HttpResponse(str(args) + str(kwargs))
@@ -39,10 +43,10 @@ class Login2View(TemplateView):
     template_name = 'tests/login2.html'
 
 
-class AuthenticatedView(DjangoViewMixin, TemplateView):
+class AuthenticatedView(PermissionsTemplateView):
 
     template_name = 'tests/passed.html'
-    permissions_class = AuthenticatedPermissions
+    permissions = AuthenticatedPermissions()
 
 
 class AccessDeniedView(MessageRedirectView):
@@ -50,38 +54,38 @@ class AccessDeniedView(MessageRedirectView):
     message = (messages.warning, 'Access Denied')
 
 
-class ResponseClassView(DjangoViewMixin, TemplateView):
+class ResponseClassView(PermissionsTemplateView):
 
     template_name = 'tests/passed.html'
-    permissions_class = AuthenticatedPermissions
+    permissions = AuthenticatedPermissions()
     permissions_response_class = AccessDeniedView
 
 
-class GetProfileView(DjangoViewMixin, TemplateView):
+class GetProfileView(PermissionsTemplateView):
 
     template_name = 'tests/passed.html'
-    permissions_class = OrStaffSuperuserPermissions
+    permissions = OrStaffSuperuserPermissions()
 
 
-class SuperuserView(DjangoViewMixin, TemplateView):
-
-    template_name = 'tests/passed.html'
-    permissions_class = SuperuserPermissions
-
-
-class OverridesIfFalseView(DjangoViewMixin, TemplateView):
+class SuperuserView(PermissionsTemplateView):
 
     template_name = 'tests/passed.html'
-    permissions_class = Permissions(
+    permissions = SuperuserPermissions()
+
+
+class OverridesIfFalseView(PermissionsTemplateView):
+
+    template_name = 'tests/passed.html'
+    permissions = Permissions(
         P(user__is_authenticated=True) &
         P(user__is_superuser=True, if_false=Login2View.as_view())
     )
 
 
-class OverridesIfTrueView(DjangoViewMixin, TemplateView):
+class OverridesIfTrueView(PermissionsTemplateView):
 
     template_name = 'tests/passed.html'
-    permissions_class = Permissions(
+    permissions = Permissions(
         P(user__is_authenticated=True) | P(
             P(user__is_authenticated=True) &
             P(user__is_superuser=True, if_true=TemplateView.as_view(template_name='tests/welcome.html'))
@@ -89,28 +93,28 @@ class OverridesIfTrueView(DjangoViewMixin, TemplateView):
     )
 
 
-class OverridesBothView(DjangoViewMixin, TemplateView):
+class OverridesBothView(PermissionsTemplateView):
 
     template_name = 'tests/passed.html'
-    permissions_class = Permissions(
+    permissions = Permissions(
         P(user__is_authenticated=True, if_false=Login2View.as_view()) |
         P(user__is_superuser=True, if_true=TemplateView.as_view(template_name='tests/welcome.html'))
     )
 
 
-class SubsequentOverridesView(DjangoViewMixin, TemplateView):
+class SubsequentOverridesView(PermissionsTemplateView):
 
     template_name = 'tests/passed.html'
-    permissions_class = Permissions(
+    permissions = Permissions(
         P(user__is_authenticated=True, if_false=Login2View.as_view()) |
         P(user__is_superuser=True, if_false=TemplateView.as_view(template_name='tests/welcome.html'))
     )
 
 
-class MenuView(DjangoViewMixin, TemplateView):
+class MenuView(PermissionsTemplateView):
 
     template_name = 'tests/menu.html'
-    permissions_class = AuthenticatedPermissions
+    permissions = AuthenticatedPermissions()
 
 
 login_view = LoginView.as_view()

@@ -5,6 +5,7 @@ PermissionsX - Authorization for Django.
 :license:   BSD, see LICENSE for more details.
 
 """
+from __future__ import absolute_import
 import copy
 import logging
 
@@ -20,23 +21,23 @@ logger = logging.getLogger('permissionsx')
 class Permissions(object):
     """Base class for defining permissions. Usage:
     ::
-        permissions_class = SuperuserPermissions
+        permissions = SuperuserPermissions
 
     Or when there is no need of reusing permissions in other parts of the code:
     ::
-        permissions_class = Permissions(P(user__is_superuser=True))
+        permissions = Permissions(P(user__is_superuser=True))
 
     """
-    permissions = None
+    rules = None
 
     def __init__(self, *args, **kwargs):
         if args:
-            if self.permissions is None:
-                self.permissions = args[0]
+            if self.rules is None:
+                self.rules = args[0]
             else:
-                self.permissions = self.permissions & args[0]
+                self.rules = self.rules & args[0]
 
-    def permissions_evaluate(self, request, expression, argument=None):
+    def rules_evaluate(self, request, expression, argument=None):
         words = expression.split('__')
         word = words.pop(0)
         try:
@@ -51,7 +52,7 @@ class Permissions(object):
                 attr = getattr(cmp_obj, word)
             except AttributeError:
                 # NOTE: If AttributeError happens here, it's probably because of
-                #       anonymous user being passed for permission checking.
+                #       anonymous user being passed for rules checking.
                 #       In that case, deny by default. REVIEW once Django gets
                 #       custom anonymous user models.
                 return False
@@ -69,25 +70,25 @@ class Permissions(object):
                 argument = getattr(request, argument.argument)
         except AttributeError:
             # NOTE: If AttributeError happens here, it's probably because of
-            #       anonymous user being passed for permission checking.
+            #       anonymous user being passed for rules checking.
             #       In that case, deny by default. REVIEW once Django gets
             #       custom anonymous user models.
             return False
         return partial == argument
 
-    def permissions_traversal(self, request, subtree):
+    def rules_traversal(self, request, subtree):
         if hasattr(subtree, 'children'):
             children_results = []
             for child in subtree.children:
                 if hasattr(child, 'children'):
-                    children_results.append(self.permissions_traversal(request, child))
+                    children_results.append(self.rules_traversal(request, child))
                 else:
                     child_copy = copy.copy(child)
                     if_true = child_copy.pop('if_true', None)
                     if_false = child_copy.pop('if_false', None)
                     # NOTE: list() used for Python 3.x compatibility.
                     items = list(child_copy.items())[0]
-                    result = self.permissions_evaluate(request, items[0], items[1])
+                    result = self.rules_evaluate(request, items[0], items[1])
                     if subtree.negated:
                         children_results.append(not result)
                     else:
@@ -101,24 +102,24 @@ class Permissions(object):
             else:
                 return not False in children_results
 
-    def get_permissions(self, request=None, **kwargs):
-        """Used for overriding :attr:`permissions` if some of the values used for authorization
+    def get_rules(self, request=None, **kwargs):
+        """Used for overriding :attr:`rules` if some of the values used for authorization
         must be compared with request object.
 
         """
-        return self.permissions
+        return self.rules
 
-    def get_combined_permissions(self, request, **kwargs):
-        permissions = self.get_permissions(request, **kwargs)
-        if self.permissions is not None and permissions is not None:
-            permissions = self.permissions & permissions
-        return permissions
+    def get_combined_rules(self, request, **kwargs):
+        rules = self.get_rules(request, **kwargs)
+        if self.rules is not None and rules is not None:
+            rules = self.rules & rules
+        return rules
 
-    def check_permissions(self, request=None, *args, **kwargs):
-        permissions = self.get_combined_permissions(request, **kwargs)
-        if permissions:
+    def check(self, request=None, *args, **kwargs):
+        rules = self.get_combined_rules(request, **kwargs)
+        if rules:
             setattr(request, 'permissionsx_return_overrides', [])
-            return self.permissions_traversal(request, permissions)
+            return self.rules_traversal(request, rules)
         return True
 
 
@@ -234,7 +235,7 @@ class P(object):
 
 class Arg(object):
     """This is a wrapper class used with :class:`P` instances to change behaviour of
-    :meth:`Permissions.permissions_evaluate` method. If :class:`Arg` is passed as a value
+    :meth:`Permissions.rules_evaluate` method. If :class:`Arg` is passed as a value
     of keyword argument, its :attr:`argument` attribute will be used to retrieve attribute
     of the request object, e.g.:
     ::
@@ -254,7 +255,7 @@ class Arg(object):
 
 class Cmp(object):
     """This is a wrapper class used with :class:`P` instances to change behaviour of
-    :meth:`Permissions.permissions_evaluate` method. If :class:`Cmp` is passed as a value
+    :meth:`Permissions.rules_evaluate` method. If :class:`Cmp` is passed as a value
     of keyword argument, its :attr:`argument` attribute will be used to retrieve attribute
     of the request object, e.g.:
     ::

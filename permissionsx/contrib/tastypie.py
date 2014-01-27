@@ -16,39 +16,35 @@ class TastypieAuthorization(Authorization):
     ::
         class StaffOnlyAuthorization(TastypieAuthorization):
 
-            permissions_class = StaffPermissions
+            permissions = StaffPermissions()
 
     """
-    def __init__(self, *args, **kwargs):
-        super(TastypieAuthorization, self).__init__(*args, **kwargs)
-        self.permissions = self.permissions_class()
-
     def read_list(self, object_list, bundle):
-        if self.permissions.check_permissions(bundle.request):
+        if self.permissions.check(bundle.request):
             return object_list
         raise Unauthorized()
 
     def read_detail(self, object_list, bundle):
-        return self.permissions.check_permissions(bundle.request)
+        return self.permissions.check(bundle.request)
 
     def create_list(self, object_list, bundle):
-        if self.permissions.check_permissions(bundle.request):
+        if self.permissions.check(bundle.request):
             return object_list
         raise Unauthorized()
 
     def create_detail(self, object_list, bundle):
-        return self.permissions.check_permissions(bundle.request)
+        return self.permissions.check(bundle.request)
 
     def update_list(self, object_list, bundle):
-        if self.permissions.check_permissions(bundle.request):
+        if self.permissions.check(bundle.request):
             return object_list
         raise Unauthorized()
 
     def update_detail(self, object_list, bundle):
-        return self.permissions.check_permissions(bundle.request)
+        return self.permissions.check(bundle.request)
 
     def delete_list(self, object_list, bundle):
-        return self.permissions.check_permissions(bundle.request)
+        return self.permissions.check(bundle.request)
 
     def delete_detail(self, object_list, bundle):
-        return self.permissions.check_permissions(bundle.request)
+        return self.permissions.check(bundle.request)

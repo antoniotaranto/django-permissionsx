@@ -5,9 +5,10 @@
 
 # django-permissionsx
 
-* Documentation: <http://django-permissionsx.readthedocs.org/>
-* Python Package: <http://pypi.python.org/pypi/django-permissionsx/>
-* Changelog: <http://django-permissionsx.readthedocs.org/en/latest/changelog.html>
+* [Documentation](http://django-permissionsx.readthedocs.org/)
+* [Changelog](http://django-permissionsx.readthedocs.org/en/latest/changelog.html)
+* [Python package](http://pypi.python.org/pypi/django-permissionsx/)
+* [Example project](http://github.com/thinkingpotato/django-permissionsx-example)
 
 ## Quick Start
 
@@ -28,25 +29,23 @@
 
 ### 3. Add permissions to your views, e.g.:
 
-        from django.views.generic import ListView
+        from permissionsx.contrib.django.views import PermissionsListView
 
-        from permissionsx.contrib.django import DjangoViewMixin
-
-        from newspaper.profiles.permissions import ManagerPermissions
+        from example.profiles.permissions import ManagerPermissions
 
 
-        class AuthenticatedListView(DjangoViewMixin, ListView):
+        class AuthenticatedListView(PermissionsListView):
 
             queryset = Item.objects.all()
-            permissions_class = Permissions(
+            permissions = Permissions(
                 P(user__is_authenticated=True)
             )
 
 
-        class ManagerListView(DjangoViewMixin, ListView):
+        class ManagerListView(PermissionsListView):
 
             queryset = Item.objects.all()
-            permissions_class = ManagerPermissions
+            permissions = ManagerPermissions()
 
 
 ### 4. Don't forget to add *permissionsx* to your *INSTALLED_APPS*:
@@ -61,7 +60,7 @@
 ### 5. Apply permissions in templates if you need:
 
         {% load permissionsx_tags %}
-        {% permissions 'newspaper.profiles.permissions.ManagerPermissions' as user_is_manager %}
+        {% permissions 'example.profiles.permissions.ManagerPermissions' as user_is_manager %}
 
         <ul id="utility-navigation">
             {% if user_is_manager %}
