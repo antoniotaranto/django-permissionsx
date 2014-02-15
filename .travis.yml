@@ -1,7 +1,7 @@
 language: python
 python:
+  - 2.6
   - 2.7
-  - 3.2
   - 3.3
 install:
   - pip install https://github.com/django/django/archive/${DJANGO}.zip#egg=django coverage coveralls --use-mirrors
@@ -15,12 +15,5 @@ after_success:
   - coverage report --omit "permissionsx/tests/*,permissionsx/utils.py,permissionsx/settings.py" -m
   - coveralls
 env:
-  - DJANGO=1.4.10
   - DJANGO=1.5.5
-  - DJANGO=1.6
-matrix:
-  exclude:
-    - python: 3.2
-      env: DJANGO=1.4.10
-    - python: 3.3
-      env: DJANGO=1.4.10
+  - DJANGO=1.6.2
