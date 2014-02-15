@@ -14,8 +14,8 @@ from django.views.generic import (
 from django.contrib import messages
 from django.http import HttpResponse
 
-from permissionsx.models import Permissions
 from permissionsx.models import P
+from permissionsx.models import Permissions
 from permissionsx.contrib.django.views import (
     PermissionsTemplateView,
     MessageRedirectView,

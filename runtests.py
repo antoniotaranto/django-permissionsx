@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """
 PermissionsX - Authorization for Django.
 
@@ -7,14 +6,12 @@ PermissionsX - Authorization for Django.
 
 """
 from __future__ import absolute_import
-import sys
 import os
-
-from django.conf import settings
-
+import sys
 
 sys.path.append(os.path.join(os.path.dirname(__file__), 'permissionsx'))
 
+from django.conf import settings
 
 configure_settings = {
     'DATABASES': {
@@ -46,11 +43,7 @@ configure_settings = {
 
 settings.configure(**configure_settings)
 
-
 from django.test.utils import get_runner
-
-
-TestRunner = get_runner(settings)
-test_runner = TestRunner(verbosity=1, interactive=False, failfast=False)
-failures = test_runner.run_tests(['tests'])
+test_runner = get_runner(settings)
+failures = test_runner(verbosity=1, interactive=False, failfast=False).run_tests(['tests'])
 sys.exit(failures)

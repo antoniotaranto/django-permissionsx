@@ -9,7 +9,19 @@ from __future__ import absolute_import
 
 from django.conf.urls import patterns, url
 
-from permissionsx.tests.views import *
+from permissionsx.tests.views import (
+    authenticated_view,
+    get_profile_view,
+    login_view,
+    login2_view,
+    menu_view,
+    overrides_both_view,
+    overrides_if_false_view,
+    overrides_if_true_view,
+    response_class_view,
+    subsequent_overrides_view,
+    superuser_view,
+)
 
 
 urlpatterns = patterns('',

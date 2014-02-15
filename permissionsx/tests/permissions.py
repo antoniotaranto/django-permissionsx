@@ -20,7 +20,9 @@ OVERRIDE_TRUE = 'Override returns True'
 OVERRIDE_FALSE = 'Override returns False'
 
 
-def if_override(x): return(x)
+def if_override(x):
+    return(x)
+
 if_true_override = lambda: if_override(OVERRIDE_TRUE)
 if_false_override = lambda: if_override(OVERRIDE_FALSE)
 

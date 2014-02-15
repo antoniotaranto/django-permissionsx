@@ -18,5 +18,3 @@ class DummyRequest(object):
     def __init__(self, user=None):
         if user is not None:
             self.user = user
-
-

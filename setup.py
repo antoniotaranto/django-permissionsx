@@ -7,10 +7,12 @@ PermissionsX - Authorization for Django.
 """
 from __future__ import absolute_import
 
-from setuptools import setup
 from setuptools import find_packages
+from setuptools import setup
+
 
 version = __import__('permissionsx').__version__
+
 
 setup(
     name='django-permissionsx',

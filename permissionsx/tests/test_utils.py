@@ -7,19 +7,18 @@ PermissionsX - Authorization for Django.
 """
 from __future__ import absolute_import
 
-from django.contrib.auth.models import User
 from django.test import (
-    TestCase,
     RequestFactory,
+    TestCase,
 )
-from django.test.client import Client
+from django.contrib.auth import logout
+from django.contrib.auth.models import User
 from django.contrib.sessions.backends.db import SessionStore
 from django.contrib.sessions.middleware import SessionMiddleware
-from django.contrib.auth import logout
+from django.test.client import Client
 
-from permissionsx.tests.models import Profile
-from permissionsx.models import Permissions
 from permissionsx import settings
+from permissionsx.tests.models import Profile
 
 
 DEFAULT_PASSWORD = 'password'

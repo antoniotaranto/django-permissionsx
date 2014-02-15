@@ -7,13 +7,42 @@ PermissionsX - Authorization for Django.
 """
 from __future__ import absolute_import
 
-from django.core.urlresolvers import reverse
 from django.contrib.auth import login
+from django.core.urlresolvers import reverse
 
 from permissionsx.contrib.django.views import DjangoViewMixin
-from permissionsx.models import Arg
+from permissionsx.models import (
+    Arg,
+    P,
+    Permissions,
+)
 from permissionsx.tests.models import TestObject
-from permissionsx.tests.permissions import *
+from permissionsx.tests.permissions import (
+    if_false_override,
+    if_true_override,
+    OVERRIDE_FALSE,
+    OVERRIDE_TRUE,
+)
+from permissionsx.tests.permissions import (
+    AndStaffSuperuserPermissions,
+    AuthenticatedPermissions,
+    IsPublicPermissions,
+    OrStaffSuperuserPermissions,
+    OverrideIfFalsePermissions,
+    OverrideIfTruePermissions,
+    OverrideIfTrueFalsePermissions,
+    NegatePermissions,
+    NegatedOverrideIfTrueFalsePermissions,
+    NestedNegatedOverridePermissions,
+    NestedNegatedPermissions,
+    NestedPermissions,
+    RequestParamPermissions,
+    StaffPermissions,
+    SuperuserPermissions,
+    user_is_authenticated,
+    user_is_staff,
+    user_is_superuser,
+)
 from permissionsx.tests.test_utils import SettingsOverride
 from permissionsx.tests.test_utils import UtilityTestCase
 from permissionsx.tests.views import SimpleGetView
@@ -306,6 +335,5 @@ class PermissionsDjangoViews(UtilityTestCase):
 
         request = self.factory.get('/')
         response = TestView().dispatch(request)
-        self.assertEqual(response.status_code, 200) #pylint: disable-msg=E1103
-        self.assertEqual(request.some_object.title, 'Some Object') #pylint: disable-msg=E1103
-
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(request.some_object.title, 'Some Object')

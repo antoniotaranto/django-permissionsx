@@ -10,9 +10,6 @@ import copy
 import logging
 
 from django.core.exceptions import ImproperlyConfigured
-from django.contrib.auth.signals import user_logged_in
-
-from permissionsx import settings
 
 
 logger = logging.getLogger('permissionsx')
@@ -141,7 +138,7 @@ class P(object):
         self.negated = negated
 
     def _combine(self, other, conn):
-        """ Derived from `Q`. """
+        """Derived from `Q`."""
         if not isinstance(other, P):
             raise TypeError(other)
         obj = P()
@@ -150,15 +147,15 @@ class P(object):
         return obj
 
     def __or__(self, other):
-        """ Derived from `Q`. """
+        """Derived from `Q`."""
         return self._combine(other, self.OR)
 
     def __and__(self, other):
-        """ Derived from `Q`. """
+        """Derived from `Q`."""
         return self._combine(other, self.AND)
 
     def __invert__(self):
-        """ Derived from `Q`. """
+        """Derived from `Q`."""
         obj = P()
         obj.add(self, self.AND)
         obj.negate()
@@ -271,4 +268,3 @@ class Cmp(object):
 
     def __str__(self):
         return 'Cmp({})'.format(self.argument)
-

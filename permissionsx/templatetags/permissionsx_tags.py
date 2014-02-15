@@ -7,4 +7,4 @@ PermissionsX - Authorization for Django.
 """
 from __future__ import absolute_import
 
-from permissionsx.contrib.django.templatetags import register
+from permissionsx.contrib.django.templatetags import register  # noqa

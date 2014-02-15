@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import sys, os
+import os
 
 from django.conf import settings
 
@@ -27,15 +27,15 @@ html_last_updated_fmt = '%b %d, %Y'
 html_show_sourcelink = False
 htmlhelp_basename = 'django-permissionsxdoc'
 latex_documents = [
-  ('index', 'django-permissionsx.tex', u'django-permissionsx Documentation',
-   u'Robert Pogorzelski', 'manual'),
+    ('index', 'django-permissionsx.tex', u'django-permissionsx Documentation',
+    u'Robert Pogorzelski', 'manual'),
 ]
 man_pages = [
     ('index', 'django-permissionsx', u'django-permissionsx Documentation',
      [u'Robert Pogorzelski'], 1)
 ]
 texinfo_documents = [
-  ('index', 'django-permissionsx', u'django-permissionsx Documentation',
-   u'Robert Pogorzelski', 'django-permissionsx', 'One line description of project.',
-   'Miscellaneous'),
+    ('index', 'django-permissionsx', u'django-permissionsx Documentation',
+    u'Robert Pogorzelski', 'django-permissionsx', 'One line description of project.',
+    'Miscellaneous'),
 ]

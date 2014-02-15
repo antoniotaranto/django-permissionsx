@@ -40,7 +40,8 @@ def permissions(context, permissions_path, **kwargs):
         granted = permissions().check(dummy_request, **kwargs)
     except AttributeError:
         # NOTE: AttributeError is _usually_ related to anonymous user being
-        #       used for checking permissions. TODO: Should be reviewed once
-        #       Django custom user model gets its anonymous counterpart.
+        #       used for checking permissions.
+        # TODO(Robert): Should be reviewed once Django custom user model
+        #               gets its anonymous counterpart.
         return False
     return granted

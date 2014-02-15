@@ -7,11 +7,11 @@ PermissionsX - Authorization for Django.
 """
 from __future__ import absolute_import
 
+from django.contrib import auth
 from django.core.exceptions import ImproperlyConfigured
 from django.utils import importlib
 from django.views.generic import RedirectView as DjangoRedirectView
 from django.views.generic import View
-from django.contrib import auth
 
 from permissionsx import settings
 

@@ -13,7 +13,7 @@ from django.utils import importlib
 def get_class(module_name, cls_name):
     try:
         module = importlib.import_module(module_name)
-    except ImportError as exc:
+    except ImportError:
         raise ImportError('Cannot import class "{}"'.format('.'.join((module_name, cls_name))))
     try:
         cls = getattr(module, cls_name)
