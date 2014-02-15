@@ -5,7 +5,7 @@ PermissionsX - Authorization for Django.
 :license:   BSD, see LICENSE for more details.
 
 """
-VERSION = (1, 3, 0)
+VERSION = (1, 3, 1)
 
 __version__ = ".".join(map(str, VERSION[0:3])) + "".join(VERSION[3:])
 __author__ = "Robert Pogorzelski <thinkingpotato@gmail.com>"
