@@ -2,6 +2,11 @@
 Changelog
 =========
 
+1.3.1
+=====
+
+* Minor maintenance release. No changes affecting current installations.
+
 1.3.0
 =====
 
