@@ -1,0 +1,10 @@
+[report]
+
+omit =
+    permissionsx/tests/*
+    permissionsx/utils.py
+    permissionsx/settings.py
+    permissionsx/templatetags/__init__.py
+    permissionsx/tests/__init__.py
+    permissionsx/contrib/__init__.py
+    permissionsx/contrib/django/__init__.py

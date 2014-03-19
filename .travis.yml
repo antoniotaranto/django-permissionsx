@@ -12,7 +12,7 @@ branches:
 script:
   - coverage run --source=permissionsx setup.py test
 after_success:
-  - coverage report --omit "permissionsx/tests/*,permissionsx/utils.py,permissionsx/settings.py" -m
+  - coverage report -m --rcfile=.coveragerc
   - coveralls
 env:
   - DJANGO=1.5.5
