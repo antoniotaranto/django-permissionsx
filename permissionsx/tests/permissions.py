@@ -20,11 +20,12 @@ OVERRIDE_TRUE = 'Override returns True'
 OVERRIDE_FALSE = 'Override returns False'
 
 
-def if_override(x):
-    return(x)
+def if_true_override():
+    return OVERRIDE_TRUE
 
-if_true_override = lambda: if_override(OVERRIDE_TRUE)
-if_false_override = lambda: if_override(OVERRIDE_FALSE)
+
+def if_false_override():
+    return OVERRIDE_FALSE
 
 
 class AuthenticatedPermissions(Permissions):
@@ -101,3 +102,8 @@ class NestedNegatedOverridePermissions(Permissions):
 class NestedNegatedPermissions(Permissions):
 
     rules = P(~P(user__is_authenticated=False) & P(P(user__is_authenticated=True) | ~P(user__is_authenticated=False)))
+
+
+class UserAttributesDependentPermissions(Permissions):
+
+    rules = P(user__username='user_username')

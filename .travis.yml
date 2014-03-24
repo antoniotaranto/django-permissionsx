@@ -1,19 +1,24 @@
 language: python
 python:
-  - 2.6
   - 2.7
-  - 3.3
 install:
-  - pip install https://github.com/django/django/archive/${DJANGO}.zip#egg=django coverage coveralls --use-mirrors
-  - pip install . --use-mirrors
+  - pip install tox coverage coveralls django==1.6.2 django-debug-toolbar==1.0.1 django-tastypie==0.11.0 --use-mirrors
+  - pip install .
 branches:
   only:
     - master
 script:
-  - coverage run --source=permissionsx setup.py test
+  - tox -e $TOX_ENV
 after_success:
-  - coverage report -m --rcfile=.coveragerc
+  - coverage erase
+  - coverage run runtests.py
+  - coverage report -m
   - coveralls
 env:
-  - DJANGO=1.5.5
-  - DJANGO=1.6.2
+  - TOX_ENV=pep8
+  - TOX_ENV=py26-django1.5.5
+  - TOX_ENV=py26-django1.6.2
+  - TOX_ENV=py27-django1.5.5
+  - TOX_ENV=py27-django1.6.2
+  - TOX_ENV=py33-django1.5.5
+  - TOX_ENV=py33-django1.6.2

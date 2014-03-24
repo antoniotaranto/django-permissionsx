@@ -13,8 +13,6 @@ class DummyRequest(object):
     checks from original :class:`HttpRequest` context.
 
     """
-    user = None
-
     def __init__(self, user=None):
         if user is not None:
             self.user = user

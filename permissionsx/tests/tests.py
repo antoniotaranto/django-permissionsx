@@ -7,15 +7,22 @@ PermissionsX - Authorization for Django.
 """
 from __future__ import absolute_import
 
+import json
+
 from django.contrib.auth import login
 from django.core.urlresolvers import reverse
+from django.core.exceptions import ImproperlyConfigured
 
-from permissionsx.contrib.django.views import DjangoViewMixin
+from permissionsx.contrib.django.views import (
+    DjangoViewMixin,
+    RedirectView,
+)
 from permissionsx.models import (
     Arg,
     P,
     Permissions,
 )
+from permissionsx.contrib.django.templatetags import permissions
 from permissionsx.tests.models import TestObject
 from permissionsx.tests.permissions import (
     if_false_override,
@@ -48,7 +55,7 @@ from permissionsx.tests.test_utils import UtilityTestCase
 from permissionsx.tests.views import SimpleGetView
 
 
-class PermissionsDefinitionsTests(UtilityTestCase):
+class PermissionsDefinitionsTestCase(UtilityTestCase):
 
     def test_is_authenticated(self):
         request = self.get_request_for_user(self.user)
@@ -201,10 +208,10 @@ class PermissionsDefinitionsTests(UtilityTestCase):
         )
 
 
-class PermissionsDjangoViews(UtilityTestCase):
+class PermissionsDjangoViewsTestCase(UtilityTestCase):
 
     def setUp(self):
-        super(PermissionsDjangoViews, self).setUp()
+        super(PermissionsDjangoViewsTestCase, self).setUp()
         self.test_object = TestObject.objects.create(title='Test!')
 
     def test_authenticated(self):
@@ -239,6 +246,21 @@ class PermissionsDjangoViews(UtilityTestCase):
         with SettingsOverride(PERMISSIONSX_REDIRECT_URL='/accounts/login2/'):
             response = self.client.get(reverse('authenticated'), follow=True)
             self.assertContains(response, 'Login2')
+
+    def test_no_redirect_if_authenticated(self):
+        with SettingsOverride(PERMISSIONSX_REDIRECT_URL='/accounts/login2/'):
+            request = self.get_request_for_user(self.user)
+            redirect_url = RedirectView(
+                request=request,
+                redirect_url='/redirected/',
+            ).get_redirect_url()
+            self.assertEqual(redirect_url, '/redirected/?next=/')
+            login(request, self.user)
+            redirect_url = RedirectView(
+                request=request,
+                redirect_url='/redirected/',
+            ).get_redirect_url()
+            self.assertEqual(redirect_url, '/redirected/')
 
     def test_response_class(self):
         response = self.client.get(reverse('response_class'), follow=True)
@@ -286,6 +308,29 @@ class PermissionsDjangoViews(UtilityTestCase):
         self.login(self.client, 'staff')
         response = self.client.get(reverse('menu'), follow=True)
         self.assertContains(response, 'Staff Menu')
+
+    def test_template_tag_permissions_for_user_attrs_anonymous(self):
+        self.user.username = 'user_username'
+        context = {'request': self.get_request_for_user(self.user)}
+        self.assertFalse(permissions(context, 'permissionsx.tests.permissions.UserAttributesDependentPermissions'))
+
+    def test_template_tag_permissions_for_user_attrs_no_request(self):
+        from django.contrib.auth.models import AnonymousUser
+        self.user.username = 'user_username'
+        context = {'user': AnonymousUser()}
+        self.assertFalse(permissions(context, 'permissionsx.tests.permissions.UserAttributesDependentPermissions'))
+
+    def test_template_tag_permissions_for_user_attrs_authenticated(self):
+        request = self.get_request_for_user(self.user)
+        login(request, self.user)
+        context = {'request': request}
+        self.assertFalse(permissions(context, 'permissionsx.tests.permissions.UserAttributesDependentPermissions'))
+
+        self.user.username = 'user_username'
+        request = self.get_request_for_user(self.user)
+        login(request, self.user)
+        context = {'request': request}
+        self.assertTrue(permissions(context, 'permissionsx.tests.permissions.UserAttributesDependentPermissions'))
 
     def test_combining_permissions(self):
 
@@ -337,3 +382,50 @@ class PermissionsDjangoViews(UtilityTestCase):
         response = TestView().dispatch(request)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(request.some_object.title, 'Some Object')
+
+    def test_exception_raised_when_no_permissions(self):
+
+        class TestView(DjangoViewMixin, SimpleGetView):
+            pass
+
+        request = self.factory.get('/')
+        self.assertRaises(ImproperlyConfigured, TestView().dispatch, request)
+
+
+class DjangoDebugToolbarIntegrationTestCase(UtilityTestCase):
+
+    def test_django_debug_toolbar_rendered(self):
+        with SettingsOverride(DEBUG=True):
+            response = self.client.get(reverse('authenticated'), follow=True)
+            self.assertContains(response, 'permissionsx.tests.views.LoginView')
+            self.login(self.client, 'user')
+            response = self.client.get(reverse('authenticated'), follow=True)
+            self.assertContains(response, 'permissionsx.tests.permissions.AuthenticatedPermissions')
+            self.assertContains(response, 'user__is_authenticated')
+
+
+class DjangoTastypieIntegrationTestCase(UtilityTestCase):
+
+    def setUp(self):
+        super(DjangoTastypieIntegrationTestCase, self).setUp()
+        self.test_object = TestObject.objects.create(title='Test!')
+
+    def test_tastypie_authorization_general(self):
+        response = self.client.get('/api/v1/testsuperuser/1/')
+        self.assertEqual(response.status_code, 401)
+        self.login(self.client, 'user')
+        response = self.client.get('/api/v1/testsuperuser/1/')
+        self.assertEqual(response.status_code, 401)
+        self.login(self.client, 'admin')
+        response = self.client.get('/api/v1/testsuperuser/1/')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Test!')
+
+    def test_tastypie_authorization_overrides(self):
+        json_data = json.dumps({'title': 'Changed!'})
+        response = self.client.put('/api/v1/testoverride/1/', json_data, content_type='application/json')
+        self.assertEqual(response.status_code, 401)
+        self.login(self.client, 'user')
+        response = self.client.put('/api/v1/testoverride/1/', json_data, content_type='application/json')
+        self.assertEqual(response.status_code, 204)
+        self.assertEqual(TestObject.objects.get(id=1).title, 'Changed!')

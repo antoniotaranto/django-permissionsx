@@ -1,8 +1,11 @@
 {% load permissionsx_tags %}
-
+<html>
+<head></head>
+<body>
 {% permissions 'permissionsx.tests.permissions.StaffPermissions' as is_staff %}
-
     User Menu
 {% if is_staff %}
     Staff Menu
 {% endif %}
+</body>
+</html>

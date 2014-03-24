@@ -42,7 +42,7 @@ class Permissions(object):
         except AttributeError:
             # NOTE: WSGIRequest has no `obj` attribute. Raise exception by
             #       default, this means something is wrong with permissions.
-            raise ImproperlyConfigured('There is no request object matching "{}". Related to rule: "{}" in class "{}".'.format(word, expression, self.__class__.__name__))
+            raise ImproperlyConfigured('There is no request object matching "{0}". Related to rule: "{1}" in class "{2}".'.format(word, expression, self.__class__.__name__))
         last_word = words.pop()
         for word in words:
             try:
@@ -247,7 +247,7 @@ class Arg(object):
         self.argument = argument
 
     def __str__(self):
-        return 'Arg({})'.format(self.argument)
+        return 'Arg({0})'.format(self.argument)
 
 
 class Cmp(object):
@@ -267,4 +267,4 @@ class Cmp(object):
         self.argument = argument
 
     def __str__(self):
-        return 'Cmp({})'.format(self.argument)
+        return 'Cmp({0})'.format(self.argument)

@@ -62,7 +62,7 @@ class DjangoViewMixin(object):
 
     def dispatch(self, request, *args, **kwargs):
         if self.permissions is None:
-            raise ImproperlyConfigured('"permissions" is not defined for {}'.format(self.__class__.__name__))
+            raise ImproperlyConfigured('"permissions" is not defined for {0}'.format(self.__class__.__name__))
         check_result = self.permissions.check(request, **kwargs)
         # NOTE: Check if any of the permissions wanted to override default response.
         if hasattr(request, 'permissionsx_return_overrides'):

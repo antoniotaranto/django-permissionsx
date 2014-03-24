@@ -6,12 +6,14 @@ PermissionsX - Authorization for Django.
 
 """
 from __future__ import absolute_import
+
 import os
 import sys
 
 sys.path.append(os.path.join(os.path.dirname(__file__), 'permissionsx'))
 
 from django.conf import settings
+
 
 configure_settings = {
     'DATABASES': {
@@ -25,15 +27,26 @@ configure_settings = {
         'django.contrib.auth',
         'django.contrib.contenttypes',
         'django.contrib.sessions',
+        'django.contrib.staticfiles',
+        'debug_toolbar',
         'permissionsx.tests',
         'permissionsx',
     ],
+    'STATIC_URL': '/static/',
     'AUTH_PROFILE_MODULE': 'tests.Profile',
     'MIDDLEWARE_CLASSES': (
+        'debug_toolbar.middleware.DebugToolbarMiddleware',
         'django.contrib.sessions.middleware.SessionMiddleware',
         'django.contrib.auth.middleware.AuthenticationMiddleware',
         'django.contrib.messages.middleware.MessageMiddleware',
     ),
+    'DEBUG_TOOLBAR_PANELS': (
+        'permissionsx.contrib.django_debug_toolbar.PermissionsPanel',
+    ),
+    'DEBUG_TOOLBAR_CONFIG': {
+        'INTERCEPT_REDIRECTS': False,
+        'SHOW_TOOLBAR_CALLBACK': 'permissionsx.tests.test_utils.show_toolbar',
+    },
     'TEMPLATE_DIRS': (
         os.path.join(os.path.abspath(os.path.dirname(__file__)), 'templates'),
         os.path.join(os.path.abspath(os.path.dirname(__file__)), 'tests/templates'),

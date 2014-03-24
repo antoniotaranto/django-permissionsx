@@ -7,8 +7,25 @@ PermissionsX - Authorization for Django.
 """
 from __future__ import absolute_import
 
-from django.conf.urls import patterns, url
+from django.conf import settings
+from django.conf.urls import (
+    include,
+    patterns,
+    url,
+)
 
+import debug_toolbar
+from tastypie.api import Api
+from tastypie.resources import ModelResource
+from tastypie.serializers import Serializer
+from tastypie.exceptions import Unauthorized
+
+from permissionsx.contrib.tastypie import TastypieAuthorization
+from permissionsx.tests.models import TestObject
+from permissionsx.tests.permissions import (
+    AuthenticatedPermissions,
+    SuperuserPermissions,
+)
 from permissionsx.tests.views import (
     authenticated_view,
     get_profile_view,
@@ -24,6 +41,54 @@ from permissionsx.tests.views import (
 )
 
 
+class SuperuserOnlyAuthorization(TastypieAuthorization):
+
+    permissions = SuperuserPermissions()
+
+
+class UpdatingOnlyAuthorization(TastypieAuthorization):
+
+    permissions = AuthenticatedPermissions()
+
+    def create_list(self, object_list, bundle):
+        raise Unauthorized()
+
+    def update_list(self, object_list, bundle):
+        raise Unauthorized()
+
+    def update_detail(self, object_list, bundle):
+        return AuthenticatedPermissions().check(bundle.request)
+
+    def delete_list(self, object_list, bundle):
+        raise Unauthorized()
+
+    def delete_detail(self, object_list, bundle):
+        raise Unauthorized()
+
+
+class TestSuperuserResource(ModelResource):
+
+    class Meta:
+        authorization = SuperuserOnlyAuthorization()
+        queryset = TestObject.objects.all()
+        fields = ('id', 'title')
+        serializer = Serializer()
+
+
+class TestOverrideResource(ModelResource):
+
+    class Meta:
+        authorization = UpdatingOnlyAuthorization()
+        queryset = TestObject.objects.all()
+        fields = ('id', 'title')
+        serializer = Serializer()
+
+
+v1_api = Api(api_name='v1')
+v1_api.register(TestSuperuserResource())
+v1_api.register(TestOverrideResource())
+
+
 urlpatterns = patterns('',
     url(r'^accounts/login/$', login_view, name='auth_login'),
     url(r'^accounts/login2/$', login2_view, name='login2'),
@@ -36,4 +101,6 @@ urlpatterns = patterns('',
     url(r'^overrides-both/$', overrides_both_view, name='overrides_both'),
     url(r'^subsequent-overrides/$', subsequent_overrides_view, name='subsequent_overrides'),
     url(r'^menu/$', menu_view, name='menu'),
+    url(r'^api/', include(v1_api.urls)),
+    url(r'^__debug__/', include(debug_toolbar.urls)),
 )

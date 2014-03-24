@@ -34,14 +34,13 @@ def permissions(context, permissions_path, **kwargs):
     if 'request' in context:
         dummy_request = copy.copy(context['request'])
     else:
-        dummy_request = DummyRequest()
-        dummy_request.user = context['user']
+        dummy_request = DummyRequest(user=context['user'])
     try:
         granted = permissions().check(dummy_request, **kwargs)
     except AttributeError:
         # NOTE: AttributeError is _usually_ related to anonymous user being
         #       used for checking permissions.
-        # TODO(Robert): Should be reviewed once Django custom user model
-        #               gets its anonymous counterpart.
+        # TODO: Should be reviewed once Django custom user model
+        #       gets its anonymous counterpart.
         return False
     return granted

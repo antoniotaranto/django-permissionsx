@@ -1,10 +1,15 @@
-[report]
+[run]
+source = permissionsx
+branch = True
 
+[report]
 omit =
     permissionsx/tests/*
     permissionsx/utils.py
     permissionsx/settings.py
-    permissionsx/templatetags/__init__.py
-    permissionsx/tests/__init__.py
-    permissionsx/contrib/__init__.py
-    permissionsx/contrib/django/__init__.py
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    raise AssertionError
+    raise NotImplementedError
+    if __name__ == .__main__.:

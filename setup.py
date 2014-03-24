@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 PermissionsX - Authorization for Django.
 
@@ -6,12 +7,27 @@ PermissionsX - Authorization for Django.
 
 """
 from __future__ import absolute_import
+import sys
 
+from setuptools.command.test import test as TestCommand
 from setuptools import find_packages
 from setuptools import setup
 
 
 version = __import__('permissionsx').__version__
+
+
+class Tox(TestCommand):
+
+    def finalize_options(self):
+        TestCommand.finalize_options(self)
+        self.test_args = []
+        self.test_suite = True
+
+    def run_tests(self):
+        import tox
+        errno = tox.cmdline(self.test_args)
+        sys.exit(errno)
 
 
 setup(
@@ -38,5 +54,6 @@ setup(
         'Topic :: Software Development',
         'Topic :: Software Development :: Libraries',
     ],
-    test_suite='runtests',
+    tests_require=['tox'],
+    cmdclass={'test': Tox},
 )

@@ -24,6 +24,10 @@ from permissionsx.tests.models import Profile
 DEFAULT_PASSWORD = 'password'
 
 
+def show_toolbar(request):
+    return True
+
+
 class UtilityTestCase(TestCase):
 
     def setUp(self):
@@ -48,8 +52,10 @@ class UtilityTestCase(TestCase):
     def login(self, client, username):
         client.login(username=username, password=DEFAULT_PASSWORD)
 
-    def get_request_for_user(self, user):
-        request = self.factory.get('/')
+    def get_request_for_user(self, user, url=None):
+        if url is None:
+            url = '/'
+        request = self.factory.get(url)
         request.user = self.user
         self.session_middleware.process_request(request)
         logout(request)
@@ -57,7 +63,8 @@ class UtilityTestCase(TestCase):
 
 
 # NOTE: SettingsOverride comes from `https://github.com/divio/django-cms/`.
-
+#       For a reason I can't already remember decorator and context manager
+#       provided by Django don't work with tests.
 class NULL:
     pass
 
