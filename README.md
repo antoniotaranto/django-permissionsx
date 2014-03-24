@@ -21,30 +21,30 @@
 
         from permissionsx.models import P
         from permissionsx.models import Permissions
-
-
+        
+        
         class ManagerPermissions(Permissions):
-
-            permissions = P(user__is_staff=True) & P(user__get_profile__is_manager=True)
+        
+            rules = P(user__is_staff=True) & P(user__get_profile__is_manager=True)
 
 
 ### 3. Add permissions to your views, e.g.:
 
         from permissionsx.contrib.django.views import PermissionsListView
-
+        
         from example.profiles.permissions import ManagerPermissions
-
-
+        
+        
         class AuthenticatedListView(PermissionsListView):
-
+        
             queryset = Item.objects.all()
             permissions = Permissions(
                 P(user__is_authenticated=True)
             )
-
-
+        
+        
         class ManagerListView(PermissionsListView):
-
+        
             queryset = Item.objects.all()
             permissions = ManagerPermissions()
 
