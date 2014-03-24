@@ -29,8 +29,6 @@ Quick Start
 
 .. code-block:: python
 
-        from django.views.generic import ListView
-
         from permissionsx.contrib.django.views import PermissionsListView
 
         from example.profiles.permissions import ManagerPermissions
