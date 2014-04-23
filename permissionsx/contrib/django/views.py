@@ -1,5 +1,4 @@
-"""
-PermissionsX - Authorization for Django.
+"""PermissionsX - Authorization for Django.
 
 :copyright: Copyright (c) 2013-2014 by Robert Pogorzelski.
 :license:   BSD, see LICENSE for more details.
@@ -10,14 +9,16 @@ from __future__ import absolute_import
 from django.contrib import auth
 from django.core.exceptions import ImproperlyConfigured
 from django.utils import importlib
-from django.views.generic import RedirectView as DjangoRedirectView
-from django.views.generic import View
+from django.views.generic import (
+    RedirectView as DjangoRedirectView,
+    View,
+)
 
 from permissionsx import settings
 
 
 class RedirectView(DjangoRedirectView):
-    """Default view used when redirecting user with insufficient permissions."""
+    """View used when redirecting user with insufficient permissions."""
 
     permanent = False
     redirect_url = None
@@ -31,13 +32,15 @@ class RedirectView(DjangoRedirectView):
 
 
 class MessageRedirectView(RedirectView):
-    """Inherits from :class:`RedirectView`. Displays message after redirect. Usage:
+    """Displays message after redirect.
+
+    Inherits from :class:`RedirectView`. Usage:
     ::
         class AccessDeniedView(MessageRedirectView):
 
             message = (messages.warning, 'Access Denied')
-
     """
+
     message = (None, None)
 
     def get_message(self, request=None):
@@ -47,24 +50,29 @@ class MessageRedirectView(RedirectView):
         msg_func, msg = self.get_message(request)
         if msg is not None:
             msg_func(request, msg)
-        return super(MessageRedirectView, self).get(request, *args, **kwargs)
+        return super(MessageRedirectView, self).get(
+            request, *args, **kwargs)
 
 
 class DjangoViewMixin(object):
     """Mixin required by any Django view used with permissions.
 
-    :attr permissions: must be instance or a subclass of :class:`Permissions`.
-    :attr permissions_response_class: must be a subclass of :class:`View`.
-
+    :attr permissions: must be instance or a subclass
+        of :class:`Permissions`.
+    :attr permissions_response_class: must be a subclass
+        of :class:`View`.
     """
+
     permissions = None
     permissions_response_class = RedirectView
 
     def dispatch(self, request, *args, **kwargs):
         if self.permissions is None:
-            raise ImproperlyConfigured('"permissions" is not defined for {0}'.format(self.__class__.__name__))
+            raise ImproperlyConfigured(
+                '"permissions" is not defined for {0}'.format(self.__class__.__name__))
         check_result = self.permissions.check(request, **kwargs)
-        # NOTE: Check if any of the permissions wanted to override default response.
+        # NOTE: Check if any of the permissions wanted to override
+        #       default response.
         if hasattr(request, 'permissionsx_return_overrides'):
             if request.permissionsx_return_overrides:
                 # NOTE: Execute override and pass View parameters.

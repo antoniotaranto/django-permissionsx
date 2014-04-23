@@ -21,7 +21,7 @@ Quick Start
 
         class ManagerPermissions(Permissions):
 
-            rules = P(user__is_staff=True) & P(user__get_profile__is_manager=True)
+            rules = P(user__is_staff=True) & P(user__has_company_assigned=True)
 
 
 3. Add permissions to your views, e.g.:

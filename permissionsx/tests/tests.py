@@ -1,5 +1,4 @@
-"""
-PermissionsX - Authorization for Django.
+"""PermissionsX - Authorization for Django.
 
 :copyright: Copyright (c) 2013-2014 by Robert Pogorzelski.
 :license:   BSD, see LICENSE for more details.
@@ -109,7 +108,8 @@ class PermissionsDefinitionsTestCase(UtilityTestCase):
         self.assertFalse(IsPublicPermissions().check(request_user))
         self.assertFalse(IsPublicPermissions().check(request_admin))
         self.assertFalse(AuthenticatedPermissions().check(request_admin))
-        self.user.get_profile().is_public = True
+        self.user.is_public = True
+        self.user.save()
         self.assertTrue(IsPublicPermissions().check(request_user))
         self.assertFalse(IsPublicPermissions().check(request_admin))
 
@@ -122,8 +122,10 @@ class PermissionsDefinitionsTestCase(UtilityTestCase):
         self.assertTrue(AuthenticatedPermissions().check(request_admin))
         self.assertFalse(NegatePermissions().check(request_user))
         self.assertFalse(NegatePermissions().check(request_admin))
-        self.user.get_profile().is_public = True
-        self.admin.get_profile().is_public = True
+        self.user.is_public = True
+        self.user.save()
+        self.admin.is_public = True
+        self.admin.save()
         self.assertTrue(NegatePermissions().check(request_user))
         self.assertTrue(NegatePermissions().check(request_admin))
 
@@ -165,12 +167,24 @@ class PermissionsDefinitionsTestCase(UtilityTestCase):
 
     def test_oneliners(self):
         request = self.get_request_for_user(self.user)
-        self.assertFalse(Permissions(P(user__is_authenticated=True) & P(user__username=request.user.username)).check(request))
+        self.assertFalse(
+            Permissions(
+                P(user__is_authenticated=True) & P(user__username=request.user.username)
+            ).check(request)
+        )
         login(request, self.user)
-        self.assertTrue(Permissions(P(user__is_authenticated=True) | P(user__username='someotheruser')).check(request))
-        Permissions(user_is_authenticated & P(user__is_superuser=True, if_false=if_true_override)).check(request)
+        self.assertTrue(
+            Permissions(
+                P(user__is_authenticated=True) | P(user__username='someotheruser')
+            ).check(request)
+        )
+        Permissions(
+            user_is_authenticated & P(user__is_superuser=True, if_false=if_true_override)
+        ).check(request)
         self.assertEqual(OVERRIDE_TRUE, request.permissionsx_return_overrides[0]())
-        Permissions(user_is_superuser | P(user__is_staff=True, if_false=if_false_override)).check(request)
+        Permissions(
+            user_is_superuser | P(user__is_staff=True, if_false=if_false_override)
+        ).check(request)
         self.assertEqual(OVERRIDE_FALSE, request.permissionsx_return_overrides[0]())
         permissions_tested = Permissions(
             P(user__is_authenticated=True) &
@@ -192,8 +206,16 @@ class PermissionsDefinitionsTestCase(UtilityTestCase):
         request = self.get_request_for_user(self.user)
         setattr(request, 'user2', self.admin)
         login(request, self.user)
-        self.assertTrue(Permissions(P(user__get_profile__is_attached_to_user=Arg('user'))).check(request))
-        self.assertFalse(Permissions(P(user__get_profile__is_attached_to_user=Arg('user2'))).check(request))
+        self.assertTrue(
+            Permissions(
+                P(user__user_is_user=Arg('user'))
+            ).check(request)
+        )
+        self.assertFalse(
+            Permissions(
+                P(user__user_is_user=Arg('user2'))
+            ).check(request)
+        )
 
     def test_nested_negated(self):
         request_admin = self.get_request_for_user(self.admin)
@@ -219,19 +241,6 @@ class PermissionsDjangoViewsTestCase(UtilityTestCase):
         self.assertContains(response, 'Login')
         self.login(self.client, 'user')
         response = self.client.get(reverse('authenticated'), follow=True)
-        self.assertContains(response, 'Passed')
-
-    def test_get_profile(self):
-        # NOTE: Uses OrStaffSuperuserPermissions == P(user__is_staff=True) | P(user__is_administrator=True)
-        response = self.client.get(reverse('get_profile'), follow=True)
-        self.assertContains(response, 'Login')
-        self.login(self.client, 'user')
-        self.assertContains(response, 'Login')
-        self.login(self.client, 'staff')
-        response = self.client.get(reverse('get_profile'), follow=True)
-        self.assertContains(response, 'Passed')
-        self.login(self.client, 'admin')
-        response = self.client.get(reverse('get_profile'), follow=True)
         self.assertContains(response, 'Passed')
 
     def test_settings_logout(self):
@@ -312,25 +321,45 @@ class PermissionsDjangoViewsTestCase(UtilityTestCase):
     def test_template_tag_permissions_for_user_attrs_anonymous(self):
         self.user.username = 'user_username'
         context = {'request': self.get_request_for_user(self.user)}
-        self.assertFalse(permissions(context, 'permissionsx.tests.permissions.UserAttributesDependentPermissions'))
+        self.assertFalse(
+            permissions(
+                context,
+                'permissionsx.tests.permissions.UserAttributesDependentPermissions'
+            )
+        )
 
     def test_template_tag_permissions_for_user_attrs_no_request(self):
         from django.contrib.auth.models import AnonymousUser
         self.user.username = 'user_username'
         context = {'user': AnonymousUser()}
-        self.assertFalse(permissions(context, 'permissionsx.tests.permissions.UserAttributesDependentPermissions'))
+        self.assertFalse(
+            permissions(
+                context,
+                'permissionsx.tests.permissions.UserAttributesDependentPermissions'
+            )
+        )
 
     def test_template_tag_permissions_for_user_attrs_authenticated(self):
         request = self.get_request_for_user(self.user)
         login(request, self.user)
         context = {'request': request}
-        self.assertFalse(permissions(context, 'permissionsx.tests.permissions.UserAttributesDependentPermissions'))
+        self.assertFalse(
+            permissions(
+                context,
+                'permissionsx.tests.permissions.UserAttributesDependentPermissions'
+            )
+        )
 
         self.user.username = 'user_username'
         request = self.get_request_for_user(self.user)
         login(request, self.user)
         context = {'request': request}
-        self.assertTrue(permissions(context, 'permissionsx.tests.permissions.UserAttributesDependentPermissions'))
+        self.assertTrue(
+            permissions(
+                context,
+                'permissionsx.tests.permissions.UserAttributesDependentPermissions'
+            )
+        )
 
     def test_combining_permissions(self):
 
@@ -361,7 +390,10 @@ class PermissionsDjangoViewsTestCase(UtilityTestCase):
         combined_rules = TestView.permissions.get_combined_rules(request)
         self.assertEqual(
             str(combined_rules),
-            '(&{\'some_object1__title\': \'Some Object 1\'},{\'some_object4__title\': \'Some Object 4\'},{\'some_object2__title\': \'Some Object 2\'},{\'some_object3__title\': \'Some Object 3\'})'
+            '(&{\'some_object1__title\': \'Some Object 1\'},'
+            '{\'some_object4__title\': \'Some Object 4\'},'
+            '{\'some_object2__title\': \'Some Object 2\'},'
+            '{\'some_object3__title\': \'Some Object 3\'})'
         )
 
     def test_combining_permissions_with_none(self):
@@ -400,8 +432,14 @@ class DjangoDebugToolbarIntegrationTestCase(UtilityTestCase):
             self.assertContains(response, 'permissionsx.tests.views.LoginView')
             self.login(self.client, 'user')
             response = self.client.get(reverse('authenticated'), follow=True)
-            self.assertContains(response, 'permissionsx.tests.permissions.AuthenticatedPermissions')
-            self.assertContains(response, 'user__is_authenticated')
+            self.assertContains(
+                response,
+                'permissionsx.tests.permissions.AuthenticatedPermissions'
+            )
+            self.assertContains(
+                response,
+                'user__is_authenticated'
+            )
 
 
 class DjangoTastypieIntegrationTestCase(UtilityTestCase):
@@ -423,9 +461,17 @@ class DjangoTastypieIntegrationTestCase(UtilityTestCase):
 
     def test_tastypie_authorization_overrides(self):
         json_data = json.dumps({'title': 'Changed!'})
-        response = self.client.put('/api/v1/testoverride/1/', json_data, content_type='application/json')
+        response = self.client.put(
+            '/api/v1/testoverride/1/',
+            json_data,
+            content_type='application/json'
+        )
         self.assertEqual(response.status_code, 401)
         self.login(self.client, 'user')
-        response = self.client.put('/api/v1/testoverride/1/', json_data, content_type='application/json')
+        response = self.client.put(
+            '/api/v1/testoverride/1/',
+            json_data,
+            content_type='application/json'
+        )
         self.assertEqual(response.status_code, 204)
         self.assertEqual(TestObject.objects.get(id=1).title, 'Changed!')

@@ -1,5 +1,4 @@
-"""
-PermissionsX - Authorization for Django.
+"""PermissionsX - Authorization for Django.
 
 :copyright: Copyright (c) 2013-2014 by Robert Pogorzelski.
 :license:   BSD, see LICENSE for more details.
@@ -20,11 +19,12 @@ class Permissions(object):
     ::
         permissions = SuperuserPermissions
 
-    Or when there is no need of reusing permissions in other parts of the code:
+    Or when there is no need of reusing permissions in other parts
+    of the code:
     ::
         permissions = Permissions(P(user__is_superuser=True))
-
     """
+
     rules = None
 
     def __init__(self, *args, **kwargs):
@@ -42,14 +42,17 @@ class Permissions(object):
         except AttributeError:
             # NOTE: WSGIRequest has no `obj` attribute. Raise exception by
             #       default, this means something is wrong with permissions.
-            raise ImproperlyConfigured('There is no request object matching "{0}". Related to rule: "{1}" in class "{2}".'.format(word, expression, self.__class__.__name__))
+            raise ImproperlyConfigured(
+                'There is no request object matching "{0}". Related to rule: "{1}" in class "{2}".'
+                .format(word, expression, self.__class__.__name__)
+            )
         last_word = words.pop()
         for word in words:
             try:
                 attr = getattr(cmp_obj, word)
             except AttributeError:
-                # NOTE: If AttributeError happens here, it's probably because of
-                #       anonymous user being passed for rules checking.
+                # NOTE: If AttributeError happens here, it's probably because
+                #       of anonymous user being passed for rules checking.
                 #       In that case, deny by default. REVIEW once Django gets
                 #       custom anonymous user models.
                 return False
@@ -66,8 +69,8 @@ class Permissions(object):
             if isinstance(argument, Cmp):
                 argument = getattr(request, argument.argument)
         except AttributeError:
-            # NOTE: If AttributeError happens here, it's probably because of
-            #       anonymous user being passed for rules checking.
+            # NOTE: If AttributeError happens here, it's probably because
+            #       of anonymous user being passed for rules checking.
             #       In that case, deny by default. REVIEW once Django gets
             #       custom anonymous user models.
             return False
@@ -78,7 +81,8 @@ class Permissions(object):
             children_results = []
             for child in subtree.children:
                 if hasattr(child, 'children'):
-                    children_results.append(self.rules_traversal(request, child))
+                    children_results.append(
+                        self.rules_traversal(request, child))
                 else:
                     child_copy = copy.copy(child)
                     if_true = child_copy.pop('if_true', None)
@@ -91,19 +95,16 @@ class Permissions(object):
                     else:
                         children_results.append(result)
                     if result and if_true is not None:
-                        request.permissionsx_return_overrides += [if_true]
+                        request.permissionsx_return_overrides.append(if_true)
                     if not result and if_false is not None:
-                        request.permissionsx_return_overrides += [if_false]
+                        request.permissionsx_return_overrides.append(if_false)
             if subtree.connector == P.OR:
                 return True in children_results
             else:
-                return not False in children_results
+                return False not in children_results
 
     def get_rules(self, request=None, **kwargs):
-        """Used for overriding :attr:`rules` if some of the values used for authorization
-        must be compared with request object.
-
-        """
+        """Used for overriding :attr:`rules`."""
         return self.rules
 
     def get_combined_rules(self, request, **kwargs):
@@ -121,7 +122,11 @@ class Permissions(object):
 
 
 class P(object):
-    """Based on `django.db.models.query_utils.Q` mixed with `django.utils.tree.Node`."""
+    """Base building block for defining rules.
+
+    Based on `django.db.models.query_utils.Q` mixed with
+    `django.utils.tree.Node`.
+    """
 
     AND = '&'
     OR = '|'
@@ -179,7 +184,7 @@ class P(object):
     def __bool__(self):
         return bool(self.children)
 
-    def __nonzero__(self):      # Python 2 compatibility
+    def __nonzero__(self):  # NOTE: Python 2 compatibility
         return type(self).__bool__(self)
 
     def __contains__(self, other):
@@ -231,18 +236,22 @@ class P(object):
 
 
 class Arg(object):
-    """This is a wrapper class used with :class:`P` instances to change behaviour of
-    :meth:`Permissions.rules_evaluate` method. If :class:`Arg` is passed as a value
-    of keyword argument, its :attr:`argument` attribute will be used to retrieve attribute
-    of the request object, e.g.:
+    """Resolves string to an attribute of the request object.
+
+    A wrapper class used with :class:`P` instances to change behaviour
+    of :meth:`Permissions.rules_evaluate` method.
+
+    If :class:`Arg` is passed, it will be used an argument for the
+    method defined in the rule (i.e. the last part of the keyword
+    argument name), e.g.:
     ::
-        P(user__get_profile__has_access_to=Arg('invoice'))
+        P(user__has_access_to=Arg('invoice'))
 
     Will translate to:
     ::
-        is_authorized = request.user.get_profile().has_access_to(request.invoice)
-
+        is_authorized = request.user.has_access_to(request.invoice)
     """
+
     def __init__(self, argument, request=None):
         self.argument = argument
 
@@ -251,18 +260,21 @@ class Arg(object):
 
 
 class Cmp(object):
-    """This is a wrapper class used with :class:`P` instances to change behaviour of
-    :meth:`Permissions.rules_evaluate` method. If :class:`Cmp` is passed as a value
-    of keyword argument, its :attr:`argument` attribute will be used to retrieve attribute
-    of the request object, e.g.:
+    """Resolves string to an attribute of the request object.
+
+    A wrapper class used with :class:`P` instances to change behaviour
+    of :meth:`Permissions.rules_evaluate` method.
+
+    If :class:`Cmp` is passed, it will be used to retrieve attribute of
+    the request object, e.g.:
     ::
-        P(user__get_profile__equals_to=Cmp('invoice'))
+        P(user__equals_to=Cmp('invoice'))
 
     Will translate to:
     ::
-        is_authorized = request.user.get_profile().equals_to == request.invoice
-
+        is_authorized = (request.user.equals_to == request.invoice)
     """
+
     def __init__(self, argument, request=None):
         self.argument = argument
 

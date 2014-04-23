@@ -22,9 +22,9 @@ P
 
 .. code-block:: python
 
-    P(user__get_profile__is_public=True)
+    P(user__is_superuser=True)
 
-It means that the value of ``request.user.get_profile().is_public`` will be compared with ``True``. If the final result is ``True``, the user will be granted access. Otherwise the user will be redirected to the ``settings.LOGIN_URL`` by default.
+It means that the value of ``request.user.is_superuser`` will be compared with ``True``. If the final result is ``True``, the user will be granted access. Otherwise the user will be redirected to the ``settings.LOGIN_URL`` by default.
 
 :class:`P` objects can be negated and combined using ~, & and | operators, exactly the same way as `Q objects <https://docs.djangoproject.com/en/1.5/topics/db/queries/#complex-lookups-with-q-objects>`_.
 
@@ -47,13 +47,13 @@ Arg
 
 .. code-block:: python
 
-    P(user__get_profile__has_access_to=Arg('invoice'))
+    P(user__has_access_to=Arg('invoice'))
 
 Note that :class:`Arg` parameter is passed as a string. Basically, it is equivalent to:
 
 .. code-block:: python
 
-    request.user.get_profile().has_access_to(request.invoice)
+    request.user.has_access_to(request.invoice)
 
 
 Cmp

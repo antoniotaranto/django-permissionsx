@@ -1,5 +1,4 @@
-"""
-PermissionsX - Authorization for Django.
+"""PermissionsX - Authorization for Django.
 
 :copyright: Copyright (c) 2013-2014 by Robert Pogorzelski.
 :license:   BSD, see LICENSE for more details.
@@ -55,17 +54,23 @@ class AndStaffSuperuserPermissions(Permissions):
 
 class NegatePermissions(Permissions):
 
-    rules = ~P(user__get_profile__is_public=False) & ~P(user__is_authenticated=False)
+    rules = ~P(user__is_public=False) & ~P(user__is_authenticated=False)
 
 
 class IsPublicPermissions(Permissions):
 
-    rules = P(user__get_profile__is_public=True)
+    rules = P(user__is_public=True)
 
 
 class NestedPermissions(Permissions):
 
-    rules = P(P(user__is_authenticated=True) & P(P(user__is_staff=True) & P(P(user__is_superuser=True) & P(user__username='admin2'))))
+    rules = P(
+        P(user__is_authenticated=True) &
+        P(
+            P(user__is_staff=True) &
+            P(P(user__is_superuser=True) & P(user__username='admin2'))
+        )
+    )
 
 
 class RequestParamPermissions(Permissions):
@@ -96,12 +101,25 @@ class NegatedOverrideIfTrueFalsePermissions(Permissions):
 
 class NestedNegatedOverridePermissions(Permissions):
 
-    rules = P(P(user__is_authenticated=False) & ~P(user__is_authenticated=True, if_true=if_true_override, if_false=if_false_override))
+    rules = P(
+        P(user__is_authenticated=False) &
+        ~P(
+            user__is_authenticated=True,
+            if_true=if_true_override,
+            if_false=if_false_override
+        )
+    )
 
 
 class NestedNegatedPermissions(Permissions):
 
-    rules = P(~P(user__is_authenticated=False) & P(P(user__is_authenticated=True) | ~P(user__is_authenticated=False)))
+    rules = P(
+        ~P(user__is_authenticated=False) &
+        P(
+            P(user__is_authenticated=True) |
+            ~P(user__is_authenticated=False)
+        )
+    )
 
 
 class UserAttributesDependentPermissions(Permissions):

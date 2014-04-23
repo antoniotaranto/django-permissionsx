@@ -2,6 +2,15 @@
 Changelog
 =========
 
+1.3.2
+=====
+
+* Minor maintenance release. No changes affecting current installations.
+* Changed policy on compatibility. Each release is now guaranteed to support:
+ * latest stable release and next upcoming of Django;
+ * latest Python 2.x and 3.x versions;
+ * latest stable versions of interoperable packages (currently `django-debug-toolbar` and `django-tastypie`)
+
 1.3.1
 =====
 

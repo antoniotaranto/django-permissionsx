@@ -1,6 +1,5 @@
 #!/usr/bin/env python
-"""
-PermissionsX - Authorization for Django.
+"""PermissionsX - Authorization for Django.
 
 :copyright: Copyright (c) 2013-2014 by Robert Pogorzelski.
 :license:   BSD, see LICENSE for more details.
@@ -40,7 +39,7 @@ setup(
     license='BSD',
     platforms=['OS Independent'],
     packages=find_packages(),
-    package_data={str('permissionsx'): [str('templates/permissionsx/panels/*')]},
+    package_data={'permissionsx': ['templates/permissionsx/panels/*']},
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Environment :: Web Environment',
@@ -49,8 +48,7 @@ setup(
         'License :: OSI Approved :: BSD License',
         'Operating System :: OS Independent',
         'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3.2',
-        'Programming Language :: Python :: 3.3',
+        'Programming Language :: Python :: 3.4',
         'Topic :: Software Development',
         'Topic :: Software Development :: Libraries',
     ],

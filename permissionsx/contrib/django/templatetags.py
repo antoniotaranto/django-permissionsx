@@ -1,5 +1,4 @@
-"""
-PermissionsX - Authorization for Django.
+"""PermissionsX - Authorization for Django.
 
 :copyright: Copyright (c) 2013-2014 by Robert Pogorzelski.
 :license:   BSD, see LICENSE for more details.
@@ -19,18 +18,19 @@ register = template.Library()
 
 @register.assignment_tag(takes_context=True)
 def permissions(context, permissions_path, **kwargs):
-    """Django template tag for checking permissions inside templates. Usage:
+    """Template tag for checking permissions inside templates.
+
+    Usage:
     ::
 
         {% load permissionsx_tags %}
         {% permissions 'example.profiles.permissions.AuthorPermissions' as user_is_author %}
-
     """
     module, _, name = permissions_path.rpartition('.')
     permissions = get_class(module, name)
-    # NOTE: Dummy request keeps temporary template objects without affecting the real
-    #       request. Otherwise iterating over them would change the object that was
-    #       assigned at the view level.
+    # NOTE: Dummy request keeps temporary template objects without
+    #       affecting the real request. Otherwise iterating over them
+    #       would change the object that was assigned at the view level.
     if 'request' in context:
         dummy_request = copy.copy(context['request'])
     else:
@@ -38,8 +38,8 @@ def permissions(context, permissions_path, **kwargs):
     try:
         granted = permissions().check(dummy_request, **kwargs)
     except AttributeError:
-        # NOTE: AttributeError is _usually_ related to anonymous user being
-        #       used for checking permissions.
+        # NOTE: AttributeError is _usually_ related to anonymous user
+        #       being used for checking permissions.
         # TODO: Should be reviewed once Django custom user model
         #       gets its anonymous counterpart.
         return False

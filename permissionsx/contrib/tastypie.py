@@ -1,5 +1,4 @@
-"""
-PermissionsX - Authorization for Django.
+"""PermissionsX - Authorization for Django.
 
 :copyright: Copyright (c) 2013-2014 by Robert Pogorzelski.
 :license:   BSD, see LICENSE for more details.
@@ -12,13 +11,15 @@ from tastypie.exceptions import Unauthorized
 
 
 class TastypieAuthorization(Authorization):
-    """Inherits from :class:`tastypie.authorization.Authorization`. Usage:
+    """Inherits from :class:`tastypie.authorization.Authorization`.
+
+    Usage:
     ::
         class StaffOnlyAuthorization(TastypieAuthorization):
 
             permissions = StaffPermissions()
-
     """
+
     def read_list(self, object_list, bundle):
         if self.permissions.check(bundle.request):
             return object_list

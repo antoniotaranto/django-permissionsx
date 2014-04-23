@@ -1,5 +1,4 @@
-"""
-PermissionsX - Authorization for Django.
+"""PermissionsX - Authorization for Django.
 
 :copyright: Copyright (c) 2013-2014 by Robert Pogorzelski.
 :license:   BSD, see LICENSE for more details.
@@ -12,6 +11,7 @@ import sys
 
 sys.path.append(os.path.join(os.path.dirname(__file__), 'permissionsx'))
 
+import django
 from django.conf import settings
 
 
@@ -33,7 +33,7 @@ configure_settings = {
         'permissionsx',
     ],
     'STATIC_URL': '/static/',
-    'AUTH_PROFILE_MODULE': 'tests.Profile',
+    'AUTH_USER_MODEL': 'tests.Profile',
     'MIDDLEWARE_CLASSES': (
         'debug_toolbar.middleware.DebugToolbarMiddleware',
         'django.contrib.sessions.middleware.SessionMiddleware',
@@ -57,6 +57,12 @@ configure_settings = {
 settings.configure(**configure_settings)
 
 from django.test.utils import get_runner
+if django.VERSION >= (1, 7):
+    django.setup()
+
 test_runner = get_runner(settings)
-failures = test_runner(verbosity=1, interactive=False, failfast=False).run_tests(['tests'])
+failures = test_runner(
+    verbosity=1,
+    interactive=False,
+    failfast=False).run_tests(['tests'])
 sys.exit(failures)

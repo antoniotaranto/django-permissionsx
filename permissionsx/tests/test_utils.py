@@ -1,5 +1,4 @@
-"""
-PermissionsX - Authorization for Django.
+"""PermissionsX - Authorization for Django.
 
 :copyright: Copyright (c) 2013-2014 by Robert Pogorzelski.
 :license:   BSD, see LICENSE for more details.
@@ -11,8 +10,10 @@ from django.test import (
     RequestFactory,
     TestCase,
 )
-from django.contrib.auth import logout
-from django.contrib.auth.models import User
+from django.contrib.auth import (
+    get_user_model,
+    logout,
+)
 from django.contrib.sessions.backends.db import SessionStore
 from django.contrib.sessions.middleware import SessionMiddleware
 from django.test.client import Client
@@ -42,9 +43,13 @@ class UtilityTestCase(TestCase):
     def create_user(self, username, **attrs):
         if attrs is None:
             attrs = {}
-        user = User.objects.create_user(username, username + '@example.com', DEFAULT_PASSWORD)
-        user.profile = Profile.objects.create(user=user)
-        user.__dict__.update(**attrs)
+        user = get_user_model().objects.create_user(
+            username,
+            username + '@example.com',
+            DEFAULT_PASSWORD
+        )
+        for name, value in attrs.items():
+            setattr(user, name, value)
         user.backend = self.session_backend
         user.save()
         return user

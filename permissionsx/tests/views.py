@@ -1,5 +1,4 @@
-"""
-PermissionsX - Authorization for Django.
+"""PermissionsX - Authorization for Django.
 
 :copyright: Copyright (c) 2013-2014 by Robert Pogorzelski.
 :license:   BSD, see LICENSE for more details.
@@ -61,12 +60,6 @@ class ResponseClassView(PermissionsTemplateView):
     permissions_response_class = AccessDeniedView
 
 
-class GetProfileView(PermissionsTemplateView):
-
-    template_name = 'tests/passed.html'
-    permissions = OrStaffSuperuserPermissions()
-
-
 class SuperuserView(PermissionsTemplateView):
 
     template_name = 'tests/passed.html'
@@ -121,7 +114,6 @@ login_view = LoginView.as_view()
 login2_view = Login2View.as_view()
 authenticated_view = AuthenticatedView.as_view()
 response_class_view = ResponseClassView.as_view()
-get_profile_view = GetProfileView.as_view()
 superuser_view = SuperuserView.as_view()
 overrides_if_false_view = OverridesIfFalseView.as_view()
 overrides_if_true_view = OverridesIfTrueView.as_view()

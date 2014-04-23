@@ -1,5 +1,4 @@
-"""
-PermissionsX - Authorization for Django.
+"""PermissionsX - Authorization for Django.
 
 :copyright: Copyright (c) 2013-2014 by Robert Pogorzelski.
 :license:   BSD, see LICENSE for more details.
@@ -51,7 +50,9 @@ class PermissionsPanel(DebugPanel):
             view_info['view_name'] = get_name_from_obj(view)
             try:
                 view_info['view_permissions'] = get_name_from_obj(view.permissions)
-                view_info['view_rules'] = str(view.permissions.get_combined_rules(request, *view_args, **view_kwargs))
+                view_info['view_rules'] = str(
+                    view.permissions.get_combined_rules(request, *view_args, **view_kwargs)
+                )
             except AttributeError:
                 # NOTE: No permissions defined for this view.
                 pass

@@ -1,5 +1,4 @@
-"""
-PermissionsX - Authorization for Django.
+"""PermissionsX - Authorization for Django.
 
 :copyright: Copyright (c) 2013-2014 by Robert Pogorzelski.
 :license:   BSD, see LICENSE for more details.
@@ -28,7 +27,6 @@ from permissionsx.tests.permissions import (
 )
 from permissionsx.tests.views import (
     authenticated_view,
-    get_profile_view,
     login_view,
     login2_view,
     menu_view,
@@ -89,12 +87,12 @@ v1_api.register(TestSuperuserResource())
 v1_api.register(TestOverrideResource())
 
 
-urlpatterns = patterns('',
+urlpatterns = patterns(
+    '',
     url(r'^accounts/login/$', login_view, name='auth_login'),
     url(r'^accounts/login2/$', login2_view, name='login2'),
     url(r'^authenticated/$', authenticated_view, name='authenticated'),
     url(r'^response-class/$', response_class_view, name='response_class'),
-    url(r'^get-profile/$', get_profile_view, name='get_profile'),
     url(r'^superuser/$', superuser_view, name='superuser'),
     url(r'^overrides-if-false/$', overrides_if_false_view, name='overrides_if_false'),
     url(r'^overrides-if-true/$', overrides_if_true_view, name='overrides_if_true'),

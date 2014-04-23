@@ -1,5 +1,4 @@
-"""
-PermissionsX - Authorization for Django.
+"""PermissionsX - Authorization for Django.
 
 :copyright: Copyright (c) 2013-2014 by Robert Pogorzelski.
 :license:   BSD, see LICENSE for more details.
@@ -8,15 +7,15 @@ PermissionsX - Authorization for Django.
 from __future__ import absolute_import
 
 from django.db import models
+from django.contrib.auth.models import AbstractUser
 
 
-class Profile(models.Model):
+class Profile(AbstractUser):
 
-    user = models.ForeignKey('auth.User')
     is_public = models.BooleanField(default=False)
 
-    def is_attached_to_user(self, user):
-        return self.user == user
+    def user_is_user(self, user):
+        return self == user
 
 
 class TestObject(models.Model):
