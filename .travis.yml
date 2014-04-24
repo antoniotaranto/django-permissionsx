@@ -2,7 +2,7 @@ language: python
 python:
   - 2.7
 install:
-  - pip install tox coverage coveralls django==1.6.2 django-debug-toolbar==1.0.1 django-tastypie==0.11.0 --use-mirrors
+  - pip install tox coverage coveralls django==1.6.3 django-debug-toolbar==1.1 django-tastypie==0.11.0 --use-mirrors
   - pip install .
 branches:
   only:
@@ -16,9 +16,9 @@ after_success:
   - coveralls
 env:
   - TOX_ENV=pep8
-  - TOX_ENV=py26-django1.5.5
-  - TOX_ENV=py26-django1.6.2
-  - TOX_ENV=py27-django1.5.5
-  - TOX_ENV=py27-django1.6.2
-  - TOX_ENV=py33-django1.5.5
-  - TOX_ENV=py33-django1.6.2
+  - TOX_ENV=py27-django-1.5.6
+  - TOX_ENV=py27-django-1.6.3
+  - TOX_ENV=py27-django-upcoming
+  - TOX_ENV=py34-django-1.5.6
+  - TOX_ENV=py34-django-1.6.3
+  - TOX_ENV=py34-django-upcoming
