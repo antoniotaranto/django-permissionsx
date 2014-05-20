@@ -11,6 +11,12 @@
 * [Python package](http://pypi.python.org/pypi/django-permissionsx/)
 * [Example project](http://github.com/thinkingpotato/django-permissionsx-example)
 
+## Feedback needed!
+
+If you find this package useful, please let me know about your experiences. If there are any bugs or things that in your opinion could be improved, please report using Github issues. I really want to make it bulletproof, so any input you provide is greatly appreciated!
+
+_Robert_
+
 ## Quick Start
 
 ### 1. Install *django-permissionsx* package:
