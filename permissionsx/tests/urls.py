@@ -34,6 +34,7 @@ from permissionsx.tests.views import (
     overrides_if_true_view,
     response_class_view,
     subsequent_overrides_view,
+    true_false_redirects_25,
     superuser_view,
 )
 
@@ -97,6 +98,7 @@ urlpatterns = patterns(
     url(r'^overrides-if-true/$', overrides_if_true_view, name='overrides_if_true'),
     url(r'^overrides-both/$', overrides_both_view, name='overrides_both'),
     url(r'^subsequent-overrides/$', subsequent_overrides_view, name='subsequent_overrides'),
+    url(r'^true-false-redirects-25/$', true_false_redirects_25, name='true_false_redirects_25'),
     url(r'^menu/$', menu_view, name='menu'),
     url(r'^api/', include(v1_api.urls)),
     url(r'^__debug__/', include(debug_toolbar.urls)),

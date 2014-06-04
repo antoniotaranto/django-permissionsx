@@ -76,7 +76,7 @@ class DjangoViewMixin(object):
         if hasattr(request, 'permissionsx_return_overrides'):
             if request.permissionsx_return_overrides:
                 # NOTE: Execute override and pass View parameters.
-                return request.permissionsx_return_overrides[0](request, *args, **kwargs)
+                return request.permissionsx_return_overrides(request, *args, **kwargs)
         # NOTE: Access granted, return the requested view.
         if check_result:
             return super(DjangoViewMixin, self).dispatch(request, *args, **kwargs)

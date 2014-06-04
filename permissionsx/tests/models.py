@@ -21,3 +21,4 @@ class Profile(AbstractUser):
 class TestObject(models.Model):
 
     title = models.CharField(max_length=50)
+    owner = models.ForeignKey(Profile)

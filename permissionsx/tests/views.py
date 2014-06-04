@@ -13,12 +13,16 @@ from django.views.generic import (
 from django.contrib import messages
 from django.http import HttpResponse
 
-from permissionsx.models import P
-from permissionsx.models import Permissions
+from permissionsx.models import (
+    Cmp,
+    P,
+    Permissions,
+)
 from permissionsx.contrib.django.views import (
     PermissionsTemplateView,
     MessageRedirectView,
 )
+from permissionsx.tests.models import TestObject
 from permissionsx.tests.permissions import (
     AuthenticatedPermissions,
     SuperuserPermissions,
@@ -103,6 +107,21 @@ class SubsequentOverridesView(PermissionsTemplateView):
     )
 
 
+class TrueFalseRedirects25View(PermissionsTemplateView):
+
+    template_name = 'tests/passed.html'
+    permissions = Permissions(
+        P(user__is_authenticated=True) &
+        P(
+            P(user__is_superuser=True) | P(object__owner=Cmp('user')), if_false=AccessDeniedView.as_view()
+        )
+    )
+
+    def dispatch(self, request, *args, **kwargs):
+        request.object = TestObject.objects.get(title='Test!')
+        return super(TrueFalseRedirects25View, self).dispatch(request, *args, **kwargs)
+
+
 class MenuView(PermissionsTemplateView):
 
     template_name = 'tests/menu.html'
@@ -118,4 +137,5 @@ overrides_if_false_view = OverridesIfFalseView.as_view()
 overrides_if_true_view = OverridesIfTrueView.as_view()
 overrides_both_view = OverridesBothView.as_view()
 subsequent_overrides_view = SubsequentOverridesView.as_view()
+true_false_redirects_25 = TrueFalseRedirects25View.as_view()
 menu_view = MenuView.as_view()

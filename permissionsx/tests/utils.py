@@ -32,6 +32,7 @@ class UtilityTestCase(TestCase):
         self.session_middleware = SessionMiddleware()
         self.factory = RequestFactory()
         self.user = self.create_user('user')
+        self.owner = self.create_user('owner')
         self.admin = self.create_user('admin', is_superuser=True)
         self.staff = self.create_user('staff', is_staff=True)
         self.client = Client()

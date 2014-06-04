@@ -149,22 +149,22 @@ class PermissionsDefinitionsTestCase(UtilityTestCase):
     def test_overrides(self):
         request_admin = self.get_request()
         OverrideIfFalsePermissions().check(request_admin)
-        self.assertEqual(OVERRIDE_FALSE, request_admin.permissionsx_return_overrides[0]())
+        self.assertEqual(OVERRIDE_FALSE, request_admin.permissionsx_return_overrides())
         OverrideIfTrueFalsePermissions().check(request_admin)
-        self.assertEqual(OVERRIDE_FALSE, request_admin.permissionsx_return_overrides[0]())
+        self.assertEqual(OVERRIDE_FALSE, request_admin.permissionsx_return_overrides())
         NegatedOverrideIfTrueFalsePermissions().check(request_admin)
-        self.assertEqual(OVERRIDE_FALSE, request_admin.permissionsx_return_overrides[0]())
+        self.assertEqual(OVERRIDE_FALSE, request_admin.permissionsx_return_overrides())
         NestedNegatedOverridePermissions().check(request_admin)
-        self.assertEqual(OVERRIDE_FALSE, request_admin.permissionsx_return_overrides[0]())
+        self.assertEqual(OVERRIDE_FALSE, request_admin.permissionsx_return_overrides())
         request_admin.user = self.admin
         OverrideIfTruePermissions().check(request_admin)
-        self.assertEqual(OVERRIDE_TRUE, request_admin.permissionsx_return_overrides[0]())
+        self.assertEqual(OVERRIDE_TRUE, request_admin.permissionsx_return_overrides())
         OverrideIfTrueFalsePermissions().check(request_admin)
-        self.assertEqual(OVERRIDE_TRUE, request_admin.permissionsx_return_overrides[0]())
+        self.assertEqual(OVERRIDE_TRUE, request_admin.permissionsx_return_overrides())
         NegatedOverrideIfTrueFalsePermissions().check(request_admin)
-        self.assertEqual(OVERRIDE_TRUE, request_admin.permissionsx_return_overrides[0]())
+        self.assertEqual(OVERRIDE_TRUE, request_admin.permissionsx_return_overrides())
         NestedNegatedOverridePermissions().check(request_admin)
-        self.assertEqual(OVERRIDE_TRUE, request_admin.permissionsx_return_overrides[0]())
+        self.assertEqual(OVERRIDE_TRUE, request_admin.permissionsx_return_overrides())
 
     def test_oneliners(self):
         request = self.get_request()
@@ -182,18 +182,18 @@ class PermissionsDefinitionsTestCase(UtilityTestCase):
         Permissions(
             user_is_authenticated & P(user__is_superuser=True, if_false=if_true_override)
         ).check(request)
-        self.assertEqual(OVERRIDE_TRUE, request.permissionsx_return_overrides[0]())
+        self.assertEqual(OVERRIDE_TRUE, request.permissionsx_return_overrides())
         Permissions(
             user_is_superuser | P(user__is_staff=True, if_false=if_false_override)
         ).check(request)
-        self.assertEqual(OVERRIDE_FALSE, request.permissionsx_return_overrides[0]())
+        self.assertEqual(OVERRIDE_FALSE, request.permissionsx_return_overrides())
         permissions_tested = Permissions(
             P(user__is_authenticated=True) &
             P(user__is_staff=True, if_false=if_false_override) &
             P(user__is_superuser=False)
         )
         permissions_tested.check(request)
-        self.assertEqual(OVERRIDE_FALSE, request.permissionsx_return_overrides[0]())
+        self.assertEqual(OVERRIDE_FALSE, request.permissionsx_return_overrides())
         request.user = self.staff
         permissions_tested = Permissions(
             P(user__is_authenticated=True) &
@@ -201,7 +201,7 @@ class PermissionsDefinitionsTestCase(UtilityTestCase):
             P(user__is_superuser=False)
         )
         permissions_tested.check(request)
-        self.assertEqual(OVERRIDE_TRUE, request.permissionsx_return_overrides[0]())
+        self.assertEqual(OVERRIDE_TRUE, request.permissionsx_return_overrides())
 
     def test_request_arguments(self):
         request = self.get_request()
@@ -235,7 +235,7 @@ class PermissionsDjangoViewsTestCase(UtilityTestCase):
 
     def setUp(self):
         super(PermissionsDjangoViewsTestCase, self).setUp()
-        self.test_object = TestObject.objects.create(title='Test!')
+        self.test_object = TestObject.objects.create(title='Test!', owner=self.owner)
 
     def test_authenticated(self):
         response = self.client.get(reverse('authenticated'), follow=True)
@@ -293,6 +293,26 @@ class PermissionsDjangoViewsTestCase(UtilityTestCase):
         self.login(self.client, 'admin')
         response = self.client.get(reverse('overrides_if_true'), follow=True)
         self.assertContains(response, 'Welcome')
+
+    def test_true_false_redirects_25(self):
+        response = self.client.get(reverse('true_false_redirects_25'), follow=True)
+        self.assertContains(response, 'Login')
+
+        self.login(self.client, 'user')
+        response = self.client.get(reverse('true_false_redirects_25'), follow=True)
+        self.assertContains(response, 'Access Denied')
+
+        self.login(self.client, 'owner')
+        response = self.client.get(reverse('true_false_redirects_25'), follow=True)
+        self.assertContains(response, 'Passed')
+
+        self.login(self.client, 'admin')
+        response = self.client.get(reverse('true_false_redirects_25'), follow=True)
+        self.assertContains(response, 'Passed')
+
+        self.login(self.client, 'user')
+        response = self.client.get(reverse('true_false_redirects_25'), follow=True)
+        self.assertContains(response, 'Access Denied')
 
     def test_both_overrides(self):
         response = self.client.get(reverse('overrides_both'), follow=True)
@@ -403,9 +423,9 @@ class PermissionsDjangoViewsTestCase(UtilityTestCase):
 
         class SomeObjectPermissions(Permissions):
 
-            # NOTE: Inherits `permissions == None` from Permissions.
             def get_rules(self, request, **kwargs):
                 request.some_object = TestObject(title='Some Object')
+                return P()
 
         class TestView(DjangoViewMixin, SimpleGetView):
 
@@ -414,8 +434,15 @@ class PermissionsDjangoViewsTestCase(UtilityTestCase):
             )
 
         request = self.factory.get('/')
+        request.user = self.staff
         response = TestView().dispatch(request)
         self.assertEqual(response.status_code, 200)
+        request.user = self.admin
+        response = TestView().dispatch(request)
+        self.assertEqual(response.status_code, 200)
+        request.user = self.user
+        response = TestView().dispatch(request)
+        self.assertEqual(response.status_code, 302)
         self.assertEqual(request.some_object.title, 'Some Object')
 
     def test_exception_raised_when_no_permissions(self):
@@ -449,7 +476,7 @@ class DjangoTastypieIntegrationTestCase(UtilityTestCase):
 
     def setUp(self):
         super(DjangoTastypieIntegrationTestCase, self).setUp()
-        self.test_object = TestObject.objects.create(title='Test!')
+        self.test_object = TestObject.objects.create(title='Test!', owner=self.owner)
 
     def test_tastypie_authorization_general(self):
         response = self.client.get('/api/v1/testsuperuser/1/')

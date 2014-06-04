@@ -66,13 +66,14 @@ Quick Start
 .. code-block:: python
 
         {% load permissionsx_tags %}
+        {% block content %}
         {% permissions 'example.profiles.permissions.ManagerPermissions' as user_is_manager %}
-
         <ul id="utility-navigation">
             {% if user_is_manager %}
                 <a href="#">Publish article</a>
             {% endif %}
         </ul>
+        {% endblock content %}
 
 
 6. That's all!

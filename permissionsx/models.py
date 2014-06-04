@@ -25,14 +25,13 @@ class Permissions(object):
     rules = None
 
     def __init__(self, *args, **kwargs):
+        if self.rules is None:
+            self.rules = P()
         if args:
-            if self.rules is None:
-                self.rules = args[0]
-            else:
-                self.rules = self.rules & args[0]
+            self.rules = self.rules & args[0]
 
-    def rules_evaluate(self, request, expression, argument=None):
-        words = expression.split('__')
+    def rules_evaluate(self, request, exp, argument=None):
+        words = exp.split('__')
         word = words.pop(0)
         try:
             cmp_obj = getattr(request, word)
@@ -41,7 +40,7 @@ class Permissions(object):
             #       default, this means something is wrong with permissions.
             raise ImproperlyConfigured(
                 'There is no request object matching "{0}". Related to rule: "{1}" in class "{2}".'
-                .format(word, expression, self.__class__.__name__)
+                .format(word, exp, self.__class__.__name__)
             )
         last_word = words.pop()
         for word in words:
@@ -73,47 +72,45 @@ class Permissions(object):
             return False
         return partial == argument
 
-    def rules_traversal(self, request, subtree):
-        if hasattr(subtree, 'children'):
-            children_results = []
-            for child in subtree.children:
-                if hasattr(child, 'children'):
-                    children_results.append(
-                        self.rules_traversal(request, child))
-                else:
-                    child_copy = copy.copy(child)
-                    if_true = child_copy.pop('if_true', None)
-                    if_false = child_copy.pop('if_false', None)
-                    # NOTE: list() used for Python 3.x compatibility.
-                    items = list(child_copy.items())[0]
-                    result = self.rules_evaluate(request, items[0], items[1])
-                    if subtree.negated:
-                        children_results.append(not result)
-                    else:
-                        children_results.append(result)
-                    if result and if_true is not None:
-                        request.permissionsx_return_overrides.append(if_true)
-                    if not result and if_false is not None:
-                        request.permissionsx_return_overrides.append(if_false)
-            if subtree.connector == P.OR:
-                return True in children_results
+    def rules_traversal(self, request, exp):
+        children_results = []
+        for idx, ele in enumerate(exp.children):
+            if isinstance(ele, P):
+                result = self.rules_traversal(request, ele)
             else:
-                return False not in children_results
+                if_false = ele.get('if_false', None)
+                if_true = ele.get('if_true', None)
+                rule = [i for i in ele.items() if i[0] not in ['if_false', 'if_true']]
+                if rule:
+                    result = self.rules_evaluate(request, *rule[0])
+                if request.permissionsx_return_overrides is None:
+                    if result and if_true is not None:
+                        request.permissionsx_return_overrides = if_true
+                    if not result and if_false is not None:
+                        request.permissionsx_return_overrides = if_false
+            children_results.append(result)
+        if exp.connector == P.OR:
+            result = True in children_results
+        else:
+            result = False not in children_results
+        if exp.negated:
+            result = not result
+        return result
 
     def get_rules(self, request=None, **kwargs):
         """Used for overriding :attr:`rules`."""
-        return self.rules
+        return P()
 
     def get_combined_rules(self, request, **kwargs):
         rules = self.get_rules(request, **kwargs)
-        if self.rules is not None and rules is not None:
-            rules = self.rules & rules
-        return rules
+        if not isinstance(rules, P):
+            raise TypeError('Method `get_rules` must return P instance!')
+        return self.rules & rules
 
     def check(self, request=None, *args, **kwargs):
         rules = self.get_combined_rules(request, **kwargs)
         if rules:
-            setattr(request, 'permissionsx_return_overrides', [])
+            setattr(request, 'permissionsx_return_overrides', None)
             return self.rules_traversal(request, rules)
         return True
 
@@ -134,6 +131,8 @@ class P(object):
             children = [kwargs]
         elif isinstance(children, P):
             children = [children]
+            if kwargs:
+                children.append(kwargs)
         self.children = children and copy.copy(children) or []
         self.connector = connector or self.default
         self.subtree_parents = []

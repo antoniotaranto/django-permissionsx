@@ -6,11 +6,11 @@ Python 2.7.x & 3.4.x
 ====================
 
 ========================== ==============================
-Package                      django-permissionsx 1.3.3
+Package                      django-permissionsx 1.3.4
 ========================== ==============================
-Django 1.5.8                             ✔
-Django 1.6.5                             ✔
-Django 1.7b4                             ✔
-django-tastypie 0.11.0                   ✔
-django-debug-toolbar==1.1                ✔
+Django 1.6.7                             ✔
+Django 1.7                               ✔
+Django master@968510e5d709               ✔
+django-tastypie 0.12.0                   ✔
+django-debug-toolbar 1.2.1               ✔
 ========================== ==============================
