@@ -16,9 +16,9 @@ after_success:
   - coveralls
 env:
   - TOX_ENV=pep8
-  - TOX_ENV=py27-django-1.5.6
-  - TOX_ENV=py27-django-1.6.3
+  - TOX_ENV=py27-django-1.5.8
+  - TOX_ENV=py27-django-1.6.5
   - TOX_ENV=py27-django-upcoming
-  - TOX_ENV=py34-django-1.5.6
-  - TOX_ENV=py34-django-1.6.3
+  - TOX_ENV=py34-django-1.5.8
+  - TOX_ENV=py34-django-1.6.5
   - TOX_ENV=py34-django-upcoming
