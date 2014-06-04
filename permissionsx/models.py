@@ -5,13 +5,10 @@
 
 """
 from __future__ import absolute_import
+
 import copy
-import logging
 
 from django.core.exceptions import ImproperlyConfigured
-
-
-logger = logging.getLogger('permissionsx')
 
 
 class Permissions(object):

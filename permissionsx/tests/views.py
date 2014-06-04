@@ -21,7 +21,6 @@ from permissionsx.contrib.django.views import (
 )
 from permissionsx.tests.permissions import (
     AuthenticatedPermissions,
-    OrStaffSuperuserPermissions,
     SuperuserPermissions,
 )
 

@@ -40,18 +40,20 @@ configure_settings = {
         'django.contrib.auth.middleware.AuthenticationMiddleware',
         'django.contrib.messages.middleware.MessageMiddleware',
     ),
+    'DEBUG': False,
+    'SHOW_TOOLBAR': False,
     'DEBUG_TOOLBAR_PANELS': (
         'permissionsx.contrib.django_debug_toolbar.PermissionsPanel',
     ),
     'DEBUG_TOOLBAR_CONFIG': {
         'INTERCEPT_REDIRECTS': False,
-        'SHOW_TOOLBAR_CALLBACK': 'permissionsx.tests.test_utils.show_toolbar',
+        'SHOW_TOOLBAR_CALLBACK': 'permissionsx.tests.utils.show_toolbar',
     },
     'TEMPLATE_DIRS': (
         os.path.join(os.path.abspath(os.path.dirname(__file__)), 'templates'),
         os.path.join(os.path.abspath(os.path.dirname(__file__)), 'tests/templates'),
     ),
-    'ROOT_URLCONF': 'permissionsx.tests.test_urls',
+    'ROOT_URLCONF': 'permissionsx.tests.urls',
 }
 
 settings.configure(**configure_settings)

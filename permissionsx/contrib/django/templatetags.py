@@ -5,6 +5,7 @@
 
 """
 from __future__ import absolute_import
+
 import copy
 
 from django import template
@@ -27,7 +28,7 @@ def permissions(context, permissions_path, **kwargs):
         {% permissions 'example.profiles.permissions.AuthorPermissions' as user_is_author %}
     """
     module, _, name = permissions_path.rpartition('.')
-    permissions = get_class(module, name)
+    permissions_cls = get_class(module, name)
     # NOTE: Dummy request keeps temporary template objects without
     #       affecting the real request. Otherwise iterating over them
     #       would change the object that was assigned at the view level.
@@ -36,7 +37,7 @@ def permissions(context, permissions_path, **kwargs):
     else:
         dummy_request = DummyRequest(user=context['user'])
     try:
-        granted = permissions().check(dummy_request, **kwargs)
+        granted = permissions_cls().check(dummy_request, **kwargs)
     except AttributeError:
         # NOTE: AttributeError is _usually_ related to anonymous user
         #       being used for checking permissions.

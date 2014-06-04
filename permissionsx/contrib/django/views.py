@@ -25,7 +25,7 @@ class RedirectView(DjangoRedirectView):
 
     def get_redirect_url(self, **kwargs):
         if self.redirect_url is None:
-            self.redirect_url = settings.PERMISSIONSX_REDIRECT_URL
+            self.redirect_url = settings.REDIRECT_URL
         if self.request.user.is_authenticated():
             return self.redirect_url
         return self.redirect_url + '?next=' + self.request.get_full_path()
@@ -80,7 +80,7 @@ class DjangoViewMixin(object):
         # NOTE: Access granted, return the requested view.
         if check_result:
             return super(DjangoViewMixin, self).dispatch(request, *args, **kwargs)
-        elif settings.PERMISSIONSX_LOGOUT_IF_DENIED:
+        elif settings.LOGOUT_IF_DENIED:
             auth.logout(request)
         # NOTE: Unauthorized.
         return self.permissions_response_class.as_view()(request, *args, **kwargs)

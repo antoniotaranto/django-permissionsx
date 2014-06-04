@@ -7,10 +7,12 @@
 from __future__ import absolute_import
 
 import json
+import mock
 
-from django.contrib.auth import login
+from django.contrib import auth
 from django.core.urlresolvers import reverse
 from django.core.exceptions import ImproperlyConfigured
+from django.test.utils import override_settings
 
 from permissionsx.contrib.django.views import (
     DjangoViewMixin,
@@ -49,49 +51,48 @@ from permissionsx.tests.permissions import (
     user_is_staff,
     user_is_superuser,
 )
-from permissionsx.tests.test_utils import SettingsOverride
-from permissionsx.tests.test_utils import UtilityTestCase
+from permissionsx.tests.utils import UtilityTestCase
 from permissionsx.tests.views import SimpleGetView
 
 
 class PermissionsDefinitionsTestCase(UtilityTestCase):
 
     def test_is_authenticated(self):
-        request = self.get_request_for_user(self.user)
+        request = self.get_request()
         self.assertFalse(AuthenticatedPermissions().check(request))
-        login(request, self.user)
+        request.user = self.user
         self.assertTrue(AuthenticatedPermissions().check(request))
 
     def test_is_superuser(self):
-        request = self.get_request_for_user(self.admin)
+        request = self.get_request()
         self.assertFalse(AuthenticatedPermissions().check(request))
-        login(request, self.admin)
+        request.user = self.admin
         self.assertTrue(AuthenticatedPermissions().check(request))
         self.assertTrue(SuperuserPermissions().check(request))
 
     def test_is_staff(self):
-        request_staff = self.get_request_for_user(self.staff)
-        request_admin = self.get_request_for_user(self.admin)
-        login(request_staff, self.staff)
-        login(request_admin, self.admin)
+        request_staff = self.get_request()
+        request_admin = self.get_request()
+        request_staff.user = self.staff
+        request_admin.user = self.admin
         self.assertTrue(StaffPermissions().check(request_staff))
         self.assertFalse(StaffPermissions().check(request_admin))
 
     def test_staff_or_superuser(self):
-        request_staff = self.get_request_for_user(self.staff)
-        request_admin = self.get_request_for_user(self.admin)
-        login(request_staff, self.staff)
-        login(request_admin, self.admin)
+        request_staff = self.get_request()
+        request_admin = self.get_request()
+        request_staff.user = self.staff
+        request_admin.user = self.admin
         self.assertTrue(OrStaffSuperuserPermissions().check(request_staff))
         self.assertTrue(OrStaffSuperuserPermissions().check(request_admin))
 
     def test_staff_and_superuser(self):
-        request_staff = self.get_request_for_user(self.staff)
-        request_admin = self.get_request_for_user(self.admin)
-        request_user = self.get_request_for_user(self.user)
-        login(request_staff, self.staff)
-        login(request_admin, self.admin)
-        login(request_user, self.user)
+        request_staff = self.get_request()
+        request_admin = self.get_request()
+        request_user = self.get_request()
+        request_staff.user = self.staff
+        request_admin.user = self.admin
+        request_user.user = self.user
         self.assertFalse(AndStaffSuperuserPermissions().check(request_staff))
         self.assertFalse(AndStaffSuperuserPermissions().check(request_admin))
         self.assertFalse(AndStaffSuperuserPermissions().check(request_user))
@@ -102,9 +103,9 @@ class PermissionsDefinitionsTestCase(UtilityTestCase):
         self.assertFalse(AndStaffSuperuserPermissions().check(request_user))
 
     def test_request_objects(self):
-        request_user = self.get_request_for_user(self.user)
-        request_admin = self.get_request_for_user(self.admin)
-        login(request_user, self.user)
+        request_user = self.get_request()
+        request_admin = self.get_request()
+        request_user.user = self.user
         self.assertFalse(IsPublicPermissions().check(request_user))
         self.assertFalse(IsPublicPermissions().check(request_admin))
         self.assertFalse(AuthenticatedPermissions().check(request_admin))
@@ -114,10 +115,10 @@ class PermissionsDefinitionsTestCase(UtilityTestCase):
         self.assertFalse(IsPublicPermissions().check(request_admin))
 
     def test_negation_request_objects(self):
-        request_user = self.get_request_for_user(self.user)
-        request_admin = self.get_request_for_user(self.admin)
-        login(request_user, self.user)
-        login(request_admin, self.admin)
+        request_user = self.get_request()
+        request_admin = self.get_request()
+        request_user.user = self.user
+        request_admin.user = self.admin
         self.assertTrue(AuthenticatedPermissions().check(request_user))
         self.assertTrue(AuthenticatedPermissions().check(request_admin))
         self.assertFalse(NegatePermissions().check(request_user))
@@ -130,9 +131,9 @@ class PermissionsDefinitionsTestCase(UtilityTestCase):
         self.assertTrue(NegatePermissions().check(request_admin))
 
     def test_nested_permissions(self):
-        request_admin = self.get_request_for_user(self.admin)
+        request_admin = self.get_request()
         self.assertFalse(NestedPermissions().check(request_admin))
-        login(request_admin, self.admin)
+        request_admin.user = self.admin
         self.assertFalse(NestedPermissions().check(request_admin))
         self.admin.username = 'admin2'
         self.assertFalse(NestedPermissions().check(request_admin))
@@ -140,13 +141,13 @@ class PermissionsDefinitionsTestCase(UtilityTestCase):
         self.assertTrue(NestedPermissions().check(request_admin))
 
     def test_request_params(self):
-        request_admin = self.get_request_for_user(self.admin)
+        request_admin = self.get_request()
         self.assertFalse(RequestParamPermissions().check(request_admin))
-        login(request_admin, self.admin)
+        request_admin.user = self.admin
         self.assertTrue(RequestParamPermissions().check(request_admin))
 
     def test_overrides(self):
-        request_admin = self.get_request_for_user(self.admin)
+        request_admin = self.get_request()
         OverrideIfFalsePermissions().check(request_admin)
         self.assertEqual(OVERRIDE_FALSE, request_admin.permissionsx_return_overrides[0]())
         OverrideIfTrueFalsePermissions().check(request_admin)
@@ -155,7 +156,7 @@ class PermissionsDefinitionsTestCase(UtilityTestCase):
         self.assertEqual(OVERRIDE_FALSE, request_admin.permissionsx_return_overrides[0]())
         NestedNegatedOverridePermissions().check(request_admin)
         self.assertEqual(OVERRIDE_FALSE, request_admin.permissionsx_return_overrides[0]())
-        login(request_admin, self.admin)
+        request_admin.user = self.admin
         OverrideIfTruePermissions().check(request_admin)
         self.assertEqual(OVERRIDE_TRUE, request_admin.permissionsx_return_overrides[0]())
         OverrideIfTrueFalsePermissions().check(request_admin)
@@ -166,13 +167,13 @@ class PermissionsDefinitionsTestCase(UtilityTestCase):
         self.assertEqual(OVERRIDE_TRUE, request_admin.permissionsx_return_overrides[0]())
 
     def test_oneliners(self):
-        request = self.get_request_for_user(self.user)
+        request = self.get_request()
         self.assertFalse(
             Permissions(
                 P(user__is_authenticated=True) & P(user__username=request.user.username)
             ).check(request)
         )
-        login(request, self.user)
+        request.user = self.user
         self.assertTrue(
             Permissions(
                 P(user__is_authenticated=True) | P(user__username='someotheruser')
@@ -193,7 +194,7 @@ class PermissionsDefinitionsTestCase(UtilityTestCase):
         )
         permissions_tested.check(request)
         self.assertEqual(OVERRIDE_FALSE, request.permissionsx_return_overrides[0]())
-        login(request, self.staff)
+        request.user = self.staff
         permissions_tested = Permissions(
             P(user__is_authenticated=True) &
             P(user__is_staff=True, if_true=if_true_override) &
@@ -203,9 +204,9 @@ class PermissionsDefinitionsTestCase(UtilityTestCase):
         self.assertEqual(OVERRIDE_TRUE, request.permissionsx_return_overrides[0]())
 
     def test_request_arguments(self):
-        request = self.get_request_for_user(self.user)
-        setattr(request, 'user2', self.admin)
-        login(request, self.user)
+        request = self.get_request()
+        request.user = self.user
+        request.user2 = self.admin
         self.assertTrue(
             Permissions(
                 P(user__user_is_user=Arg('user'))
@@ -218,9 +219,9 @@ class PermissionsDefinitionsTestCase(UtilityTestCase):
         )
 
     def test_nested_negated(self):
-        request_admin = self.get_request_for_user(self.admin)
+        request_admin = self.get_request()
         self.assertFalse(NestedNegatedPermissions().check(request_admin))
-        login(request_admin, self.admin)
+        request_admin.user = self.admin
         self.assertTrue(NestedNegatedPermissions().check(request_admin))
 
     def test_children(self):
@@ -243,33 +244,35 @@ class PermissionsDjangoViewsTestCase(UtilityTestCase):
         response = self.client.get(reverse('authenticated'), follow=True)
         self.assertContains(response, 'Passed')
 
+    @mock.patch('permissionsx.settings.LOGOUT_IF_DENIED', True)
     def test_settings_logout(self):
-        with SettingsOverride(PERMISSIONSX_LOGOUT_IF_DENIED=True):
-            self.login(self.client, 'user')
-            response = self.client.get(reverse('authenticated'), follow=True)
-            self.assertContains(response, 'Passed')
-            self.client.get(reverse('superuser'), follow=True)
-            self.assertNotIn('_auth_user_id', self.client.session)
+        self.login(self.client, 'user')
+        self.assertTrue(auth.get_user(self.client).is_authenticated())
+        response = self.client.get(reverse('authenticated'), follow=True)
+        self.assertContains(response, 'Passed')
+        response = self.client.get(reverse('authenticated'), follow=True)
+        self.assertContains(response, 'Passed')
+        response = self.client.get(reverse('superuser'), follow=True)
+        self.assertFalse(auth.get_user(self.client).is_authenticated())
 
+    @mock.patch('permissionsx.settings.REDIRECT_URL', '/accounts/login2/')
     def test_settings_redirect_url(self):
-        with SettingsOverride(PERMISSIONSX_REDIRECT_URL='/accounts/login2/'):
-            response = self.client.get(reverse('authenticated'), follow=True)
-            self.assertContains(response, 'Login2')
+        response = self.client.get(reverse('authenticated'), follow=True)
+        self.assertContains(response, 'Login2')
 
     def test_no_redirect_if_authenticated(self):
-        with SettingsOverride(PERMISSIONSX_REDIRECT_URL='/accounts/login2/'):
-            request = self.get_request_for_user(self.user)
-            redirect_url = RedirectView(
-                request=request,
-                redirect_url='/redirected/',
-            ).get_redirect_url()
-            self.assertEqual(redirect_url, '/redirected/?next=/')
-            login(request, self.user)
-            redirect_url = RedirectView(
-                request=request,
-                redirect_url='/redirected/',
-            ).get_redirect_url()
-            self.assertEqual(redirect_url, '/redirected/')
+        request = self.get_request()
+        redirect_url = RedirectView(
+            request=request,
+            redirect_url='/redirected/',
+        ).get_redirect_url()
+        self.assertEqual(redirect_url, '/redirected/?next=/')
+        request.user = self.user
+        redirect_url = RedirectView(
+            request=request,
+            redirect_url='/redirected/',
+        ).get_redirect_url()
+        self.assertEqual(redirect_url, '/redirected/')
 
     def test_response_class(self):
         response = self.client.get(reverse('response_class'), follow=True)
@@ -320,7 +323,7 @@ class PermissionsDjangoViewsTestCase(UtilityTestCase):
 
     def test_template_tag_permissions_for_user_attrs_anonymous(self):
         self.user.username = 'user_username'
-        context = {'request': self.get_request_for_user(self.user)}
+        context = {'request': self.get_request()}
         self.assertFalse(
             permissions(
                 context,
@@ -340,8 +343,8 @@ class PermissionsDjangoViewsTestCase(UtilityTestCase):
         )
 
     def test_template_tag_permissions_for_user_attrs_authenticated(self):
-        request = self.get_request_for_user(self.user)
-        login(request, self.user)
+        request = self.get_request()
+        request.user = self.user
         context = {'request': request}
         self.assertFalse(
             permissions(
@@ -351,8 +354,8 @@ class PermissionsDjangoViewsTestCase(UtilityTestCase):
         )
 
         self.user.username = 'user_username'
-        request = self.get_request_for_user(self.user)
-        login(request, self.user)
+        request = self.get_request()
+        request.user = self.user
         context = {'request': request}
         self.assertTrue(
             permissions(
@@ -426,20 +429,20 @@ class PermissionsDjangoViewsTestCase(UtilityTestCase):
 
 class DjangoDebugToolbarIntegrationTestCase(UtilityTestCase):
 
+    @override_settings(SHOW_TOOLBAR=True)
     def test_django_debug_toolbar_rendered(self):
-        with SettingsOverride(DEBUG=True):
-            response = self.client.get(reverse('authenticated'), follow=True)
-            self.assertContains(response, 'permissionsx.tests.views.LoginView')
-            self.login(self.client, 'user')
-            response = self.client.get(reverse('authenticated'), follow=True)
-            self.assertContains(
-                response,
-                'permissionsx.tests.permissions.AuthenticatedPermissions'
-            )
-            self.assertContains(
-                response,
-                'user__is_authenticated'
-            )
+        response = self.client.get(reverse('authenticated'), follow=True)
+        self.assertContains(response, 'permissionsx.tests.views.LoginView')
+        self.login(self.client, 'user')
+        response = self.client.get(reverse('authenticated'), follow=True)
+        self.assertContains(
+            response,
+            'permissionsx.tests.permissions.AuthenticatedPermissions'
+        )
+        self.assertContains(
+            response,
+            'user__is_authenticated'
+        )
 
 
 class DjangoTastypieIntegrationTestCase(UtilityTestCase):
