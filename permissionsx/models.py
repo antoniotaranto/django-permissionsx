@@ -74,16 +74,16 @@ class Permissions(object):
 
     def rules_traversal(self, request, exp):
         children_results = []
-        for idx, ele in enumerate(exp.children):
-            if isinstance(ele, P):
-                result = self.rules_traversal(request, ele)
+        for child in exp.children:
+            if isinstance(child, P):
+                result = self.rules_traversal(request, child)
             else:
-                if_false = ele.get('if_false', None)
-                if_true = ele.get('if_true', None)
-                rule = [i for i in ele.items() if i[0] not in ['if_false', 'if_true']]
+                rule = [i for i in child.items() if i[0] not in ['if_false', 'if_true']]
                 if rule:
                     result = self.rules_evaluate(request, *rule[0])
                 if request.permissionsx_return_overrides is None:
+                    if_true = child.get('if_true', None)
+                    if_false = child.get('if_false', None)
                     if result and if_true is not None:
                         request.permissionsx_return_overrides = if_true
                     if not result and if_false is not None:
