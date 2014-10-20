@@ -2,6 +2,22 @@
 Changelog
 =========
 
+1.3.4
+=====
+
+* Adding redirects inside of a wrapping P() is now possible, e.g.
+
+.. code-block:: python
+
+    class TestView(PermissionsTemplateView):
+
+        permissions = Permissions(
+            P(user__is_authenticated=True) &
+            P(
+                P(user__is_superuser=True) | P(object__owner=Cmp('user')), if_false=AccessDeniedView.as_view()
+            )
+        )
+
 1.3.3
 =====
 
