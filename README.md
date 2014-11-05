@@ -64,7 +64,15 @@ _Robert_
             [...]
             'permissionsx',
 
-### 5. Apply permissions in templates if you need:
+### 5. Now add request context processor, so you can use permissions in your templates:
+
+        TEMPLATE_CONTEXT_PROCESSORS = (
+            [...]
+            'django.core.context_processors.request',
+            [...]
+        )
+
+### 6. Apply permissions in templates if you need:
 
         {% load permissionsx_tags %}
         {% block content %}
@@ -76,7 +84,7 @@ _Robert_
         </ul>
         {% endblock content %}
 
-### 6. That's all!
+### 7. That's all!
 
 User will be redirected to *LOGIN_URL* by default, if:
 

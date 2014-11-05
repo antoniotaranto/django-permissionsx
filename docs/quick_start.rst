@@ -60,7 +60,18 @@ Quick Start
             [...]
             'permissionsx',
 
-5. Apply permissions in templates if you need:
+5. Now add request context processor, so you can use permissions in your templates:
+-----------------------------------------------------------------------------------
+
+.. code-block:: python
+
+        TEMPLATE_CONTEXT_PROCESSORS = (
+            [...]
+            'django.core.context_processors.request',
+            [...]
+        )
+
+6. Apply permissions in templates if you need:
 ----------------------------------------------
 
 .. code-block:: python
@@ -76,7 +87,7 @@ Quick Start
         {% endblock content %}
 
 
-6. That's all!
+7. That's all!
 --------------
 
 User will be redirected to :attr:`LOGIN_URL` by default, if:
